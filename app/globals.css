@@ -1,0 +1,115 @@
+@import 'react-datepicker/dist/react-datepicker.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-secondary text-charcoal font-sans antialiased;
+    background-image: radial-gradient(circle at 20% 20%, rgba(246, 176, 146, 0.2), transparent 40%),
+      radial-gradient(circle at 80% 0%, rgba(120, 213, 198, 0.2), transparent 40%);
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display text-charcoal;
+  }
+
+  a {
+    @apply text-charcoal;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/80 backdrop-blur-xl border border-white/40 shadow-soft;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-secondary;
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.6) 50%, rgba(255, 255, 255, 0.1) 100%);
+    background-size: 200% 100%;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-xs font-medium text-charcoal/70 shadow-soft;
+  }
+
+  .pill {
+    @apply rounded-full bg-white/80 px-4 py-2 text-sm text-charcoal/70 shadow-soft;
+  }
+
+  .card-surface {
+    @apply rounded-2xl bg-white/80 border border-white/50 shadow-soft;
+  }
+}
+
+/* React Datepicker overrides */
+.react-datepicker {
+  border: none;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 20px 40px -24px rgba(58, 58, 58, 0.35);
+  font-family: var(--font-sans), Inter, system-ui, sans-serif;
+}
+
+.react-datepicker__header {
+  background-color: #F7F3EE;
+  border-bottom: 1px solid #E6DED8;
+  padding-top: 0.75rem;
+}
+
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: #1F2A44;
+  color: #fff;
+}
+
+.react-datepicker__day:hover {
+  background-color: rgba(31, 42, 68, 0.12);
+}
+
+.react-datepicker__day--disabled {
+  color: #B5A7A2;
+}
+
+/* Confetti */
+.confetti {
+  position: relative;
+  overflow: hidden;
+}
+
+.confetti::before,
+.confetti::after {
+  content: '';
+  position: absolute;
+  inset: -20% 0 auto 0;
+  height: 200px;
+  background-image: radial-gradient(circle, rgba(246, 176, 146, 0.5) 20%, transparent 20%),
+    radial-gradient(circle, rgba(120, 213, 198, 0.45) 20%, transparent 20%),
+    radial-gradient(circle, rgba(31, 42, 68, 0.2) 20%, transparent 20%);
+  background-size: 18px 18px, 22px 22px, 26px 26px;
+  animation: float 8s linear infinite;
+  opacity: 0.6;
+}
+
+.confetti::after {
+  inset: -25% 0 auto 0;
+  animation-duration: 10s;
+  opacity: 0.4;
+}
