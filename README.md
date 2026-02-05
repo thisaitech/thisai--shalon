@@ -19,3 +19,4 @@ Vercel (frontend) + Firebase (backend)
 - Single timezone assumption for MVP.
 - Reminder automation is Phase 2 (see `app/api/reminders/route.ts`).
 - Firebase security rules are stubbed in `firestore.rules` (TODO for production).
+# thisai--shalon
