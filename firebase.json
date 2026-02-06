@@ -4,6 +4,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "site": "thisai-salon-c783a",
     "source": ".",
     "frameworksBackend": {
       "region": "us-central1"
