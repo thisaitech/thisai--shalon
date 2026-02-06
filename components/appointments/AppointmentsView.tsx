@@ -23,15 +23,25 @@ export default function AppointmentsView({ title }: { title: string }) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!auth || !db) {
+      setError('Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys.');
+      setLoading(false);
+      return;
+    }
+    const firebaseAuth = auth;
+    const firestore = db;
     let unsubscribeSnapshot = () => {};
-    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+    const unsubscribeAuth = onAuthStateChanged(firebaseAuth, (user) => {
       if (!user) {
         setAppointments([]);
         setLoading(false);
         return;
       }
 
-      const q = query(collection(db, 'appointments'), where('customerId', '==', user.uid));
+      const q = query(
+        collection(firestore, 'appointments'),
+        where('customerId', '==', user.uid)
+      );
       unsubscribeSnapshot();
       unsubscribeSnapshot = onSnapshot(
         q,

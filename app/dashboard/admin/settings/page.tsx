@@ -45,14 +45,25 @@ export default function AdminSettingsPage() {
     duration: 45
   });
   const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const unsubAuth = onAuthStateChanged(auth, (user) => {
+    if (!auth || !db) {
+      setError('Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys.');
+      setLoading(false);
+      return;
+    }
+    const firebaseAuth = auth;
+    const firestore = db;
+    const unsubAuth = onAuthStateChanged(firebaseAuth, (user) => {
       if (!user) {
         setLoading(false);
         return;
       }
-      const q = query(collection(db, 'salons'), where('ownerId', '==', user.uid));
+      const q = query(
+        collection(firestore, 'salons'),
+        where('ownerId', '==', user.uid)
+      );
       const unsubSalon = onSnapshot(q, (snapshot) => {
         const docSnap = snapshot.docs[0];
         if (!docSnap) {
@@ -79,9 +90,10 @@ export default function AdminSettingsPage() {
   };
 
   const handleSave = async () => {
-    if (!salonId) return;
+    if (!salonId || !db) return;
+    const firestore = db;
     setStatus(null);
-    await updateDoc(doc(db, 'salons', salonId), {
+    await updateDoc(doc(firestore, 'salons', salonId), {
       businessHours,
       services
     });
@@ -100,6 +112,16 @@ export default function AdminSettingsPage() {
         <Skeleton className="h-10 w-1/3" />
         <Skeleton className="h-24" />
         <Skeleton className="h-24" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-5xl mx-auto px-6 py-12">
+        <div className="glass rounded-2xl p-6 text-sm text-red-600" role="alert">
+          {error}
+        </div>
       </div>
     );
   }

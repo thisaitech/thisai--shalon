@@ -28,19 +28,27 @@ export default function AdminDashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [salonId, setSalonId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const todayKey = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   useEffect(() => {
+    if (!auth || !db) {
+      setError('Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys.');
+      setLoading(false);
+      return;
+    }
+    const firebaseAuth = auth;
+    const firestore = db;
     let unsubscribeAppointments = () => {};
-    const unsubAuth = onAuthStateChanged(auth, (user) => {
+    const unsubAuth = onAuthStateChanged(firebaseAuth, (user) => {
       if (!user) {
         setLoading(false);
         return;
       }
 
       const salonQuery = query(
-        collection(db, 'salons'),
+        collection(firestore, 'salons'),
         where('ownerId', '==', user.uid)
       );
 
@@ -54,7 +62,7 @@ export default function AdminDashboardPage() {
         setSalonId(id);
 
         const appointmentQuery = query(
-          collection(db, 'appointments'),
+          collection(firestore, 'appointments'),
           where('salonId', '==', id),
           where('date', '==', todayKey)
         );
@@ -83,7 +91,7 @@ export default function AdminDashboardPage() {
   }, [todayKey]);
 
   const updateStatus = async (appointmentId: string, status: string) => {
-    if (!salonId) return;
+    if (!salonId || !db) return;
     await updateDoc(doc(db, 'appointments', appointmentId), { status });
   };
 
@@ -98,6 +106,10 @@ export default function AdminDashboardPage() {
         <div className="space-y-3">
           <Skeleton className="h-20" />
           <Skeleton className="h-20" />
+        </div>
+      ) : error ? (
+        <div className="glass rounded-2xl p-6 text-sm text-red-600" role="alert">
+          {error}
         </div>
       ) : appointments.length === 0 ? (
         <div className="glass rounded-2xl p-10 text-center">

@@ -24,6 +24,11 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError(null);
+    if (!auth) {
+      setError('Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys.');
+      setLoading(false);
+      return;
+    }
     try {
       await signInWithEmailAndPassword(auth, email, password);
       document.cookie = 'lumiere_auth=1; path=/';
@@ -68,6 +73,11 @@ export default function LoginPage() {
         <div className="glass rounded-2xl p-10 w-full max-w-md mx-auto">
           <h2 className="text-2xl font-display text-primary">Log in with email</h2>
           <p className="mt-2 text-sm text-charcoal/70">We’ll keep your appointments in sync.</p>
+          {!auth ? (
+            <p className="mt-4 text-sm text-red-600" role="alert">
+              Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys in Vercel.
+            </p>
+          ) : null}
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -94,7 +104,7 @@ export default function LoginPage() {
                 {error}
               </p>
             ) : null}
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={loading || !auth}>
               {loading ? (
                 <span className="flex items-center gap-2">
                   <Spinner className="h-4 w-4 border-white/40 border-t-white" />

@@ -26,6 +26,11 @@ export default function BookingFlow({ salon }: { salon: Salon }) {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!auth) {
+      setUserEmail(null);
+      setUserId(null);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUserEmail(user?.email ?? null);
       setUserId(user?.uid ?? null);

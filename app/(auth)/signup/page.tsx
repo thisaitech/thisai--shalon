@@ -21,6 +21,11 @@ export default function SignupPage() {
     event.preventDefault();
     setLoading(true);
     setError(null);
+    if (!auth) {
+      setError('Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys.');
+      setLoading(false);
+      return;
+    }
     try {
       await createUserWithEmailAndPassword(auth, email, password);
       document.cookie = 'lumiere_auth=1; path=/';
@@ -39,6 +44,11 @@ export default function SignupPage() {
         <p className="mt-2 text-sm text-charcoal/70">
           Book appointments and track your rituals in one place.
         </p>
+        {!auth ? (
+          <p className="mt-4 text-sm text-red-600" role="alert">
+            Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys in Vercel.
+          </p>
+        ) : null}
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -65,7 +75,7 @@ export default function SignupPage() {
               {error}
             </p>
           ) : null}
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full" disabled={loading || !auth}>
             {loading ? (
               <span className="flex items-center gap-2">
                 <Spinner className="h-4 w-4 border-white/40 border-t-white" />

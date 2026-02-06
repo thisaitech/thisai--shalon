@@ -24,6 +24,11 @@ export default function SalonSignupPage() {
     event.preventDefault();
     setLoading(true);
     setError(null);
+    if (!auth || !db) {
+      setError('Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys.');
+      setLoading(false);
+      return;
+    }
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       const salonId = `salon-${cred.user.uid}`;
@@ -53,6 +58,11 @@ export default function SalonSignupPage() {
         <p className="mt-2 text-sm text-charcoal/70">
           Let clients discover your space and book instantly.
         </p>
+        {!auth || !db ? (
+          <p className="mt-4 text-sm text-red-600" role="alert">
+            Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys in Vercel.
+          </p>
+        ) : null}
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="salonName">Salon name</Label>
@@ -100,7 +110,7 @@ export default function SalonSignupPage() {
               {error}
             </p>
           ) : null}
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full" disabled={loading || !auth || !db}>
             {loading ? (
               <span className="flex items-center gap-2">
                 <Spinner className="h-4 w-4 border-white/40 border-t-white" />
