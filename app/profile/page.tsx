@@ -120,7 +120,7 @@ export default function ProfilePage() {
       <div>
         <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Profile</p>
         <h1 className="text-4xl font-display text-gradient">Your profile</h1>
-        <p className="text-sm text-charcoal/70 max-w-2xl">
+        <p className="text-sm text-charcoal/80 max-w-2xl">
           Keep your bridal, groom, and glow preferences ready for every booking.
         </p>
       </div>
@@ -128,7 +128,7 @@ export default function ProfilePage() {
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <div className="glass-panel rounded-3xl p-8 space-y-6">
           {loading ? (
-            <div className="flex items-center gap-3 text-sm text-charcoal/70">
+            <div className="flex items-center gap-3 text-sm text-charcoal/80">
               <Spinner className="h-4 w-4 border-primary/30 border-t-primary" />
               Loading profile...
             </div>
@@ -223,14 +223,14 @@ export default function ProfilePage() {
           <div className="card-spotlight p-6 space-y-3">
             <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Membership</p>
             <h2 className="text-2xl font-display text-primary">Glow Circle</h2>
-            <p className="text-sm text-charcoal/70">
+            <p className="text-sm text-charcoal/80">
               Priority booking, bridal trials, and spa upgrades every month.
             </p>
             <Button className="w-full">Upgrade membership</Button>
           </div>
           <div className="card-surface p-6 space-y-3">
             <p className="text-sm font-medium text-primary">Upcoming benefits</p>
-            <ul className="text-sm text-charcoal/70 space-y-2">
+            <ul className="text-sm text-charcoal/80 space-y-2">
               <li>• Complimentary bridal touch-ups</li>
               <li>• Groom grooming add-ons</li>
               <li>• 15% off hair spa rituals</li>

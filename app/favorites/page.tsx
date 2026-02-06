@@ -32,15 +32,15 @@ export default function FavoritesPage() {
       <div className="flex flex-col gap-3">
         <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Saved</p>
         <h1 className="text-4xl font-display text-gradient">Your saved looks</h1>
-        <p className="text-sm text-charcoal/70 max-w-2xl">
+        <p className="text-sm text-charcoal/80 max-w-2xl">
           Keep your favorite bridal, groom, and glow styles ready for instant rebooking.
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">
         {savedLooks.map((look) => (
           <div key={look.title} className="card-spotlight overflow-hidden">
-            <div className="relative h-40 w-full">
+            <div className="relative h-44 w-full">
               <Image
                 src={look.image}
                 alt={look.title}

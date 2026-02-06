@@ -23,7 +23,7 @@ export default function ServiceItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        'w-full text-left rounded-3xl border border-white/70 bg-white/85 p-5 transition-all hover:-translate-y-0.5 hover:shadow-glow focus-ring',
+        'w-full text-left rounded-3xl border border-white/70 bg-white/85 p-5 transition-all hover:-translate-y-0.5 hover:shadow-glow focus-ring min-h-[120px] flex flex-col justify-between',
         selected && 'border-primary/40 bg-white shadow-glow'
       )}
     >

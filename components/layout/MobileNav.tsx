@@ -31,7 +31,7 @@ export default function MobileNav() {
   }
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-40 w-[min(520px,94vw)] -translate-x-1/2 rounded-3xl bg-white/90 shadow-glow border border-white/70 px-3 py-2 backdrop-blur-xl md:hidden">
+    <div className="fixed bottom-4 left-1/2 z-40 w-[min(520px,94vw)] -translate-x-1/2 rounded-[28px] bg-white/90 shadow-glow border border-white/70 px-3 py-2 backdrop-blur-xl md:hidden">
       <nav className="flex items-center justify-between">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
@@ -40,14 +40,14 @@ export default function MobileNav() {
               key={href}
               href={href}
               className={cn(
-                'flex flex-col items-center gap-1 text-[11px] font-medium text-charcoal/60 transition-all',
+                'flex flex-col items-center gap-1 text-[10px] font-medium text-charcoal/60 transition-all',
                 isActive && 'text-primary'
               )}
             >
               <span
                 className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-full',
-                  isActive && 'bg-primary/10'
+                  'flex h-10 w-10 items-center justify-center rounded-full transition-all',
+                  isActive && 'bg-gradient-to-r from-primary via-lilac to-accent text-white shadow-glow'
                 )}
               >
                 <Icon size={18} />

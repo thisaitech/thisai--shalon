@@ -11,7 +11,7 @@ export default function ServicesPage() {
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Services</p>
           <h1 className="text-4xl font-display text-gradient">Indian bridal + unisex menu</h1>
-          <p className="text-sm text-charcoal/70 mt-2">
+          <p className="text-sm text-charcoal/80 mt-2">
             Explore curated service styles and reserve an appointment instantly.
           </p>
         </div>
@@ -23,7 +23,7 @@ export default function ServicesPage() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
         {salon.services.map((service) => (
           <ServiceItem
             key={service.id}

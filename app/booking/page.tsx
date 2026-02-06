@@ -17,10 +17,14 @@ export default function BookingPage({
       <div className="flex flex-col gap-3">
         <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Booking</p>
         <h1 className="text-4xl font-display text-gradient">Reserve your appointment</h1>
-        <p className="text-sm text-charcoal/70 max-w-2xl">
+        <p className="text-sm text-charcoal/80 max-w-2xl">
           Select your service, pick a time, and confirm your glow session. Bridal, groom, and unisex
           bookings are available every day.
         </p>
+        <div className="flex flex-wrap gap-2">
+          <span className="pill bg-white/90">Same-day slots</span>
+          <span className="pill bg-primary/10 text-primary">Instant confirmation</span>
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
@@ -50,10 +54,10 @@ export default function BookingPage({
               </span>
               <div>
                 <p className="font-medium text-primary">What to bring</p>
-                <p className="text-sm text-charcoal/70">Reference photos + outfit inspiration.</p>
+                <p className="text-sm text-charcoal/80">Reference photos + outfit inspiration.</p>
               </div>
             </div>
-            <ul className="text-sm text-charcoal/70 space-y-2">
+            <ul className="text-sm text-charcoal/80 space-y-2">
               <li>• Bridal trials arrive makeup-free.</li>
               <li>• Groom services include skin prep + beard grooming.</li>
               <li>• Hair spa includes herbal cleanse + steam.</li>
@@ -66,10 +70,10 @@ export default function BookingPage({
               </span>
               <div>
                 <p className="font-medium text-primary">Glow promise</p>
-                <p className="text-sm text-charcoal/70">Luxury products and precision artists.</p>
+                <p className="text-sm text-charcoal/80">Luxury products and precision artists.</p>
               </div>
             </div>
-            <p className="text-sm text-charcoal/70">
+            <p className="text-sm text-charcoal/80">
               Need to reschedule? Message us within 12 hours for complimentary adjustments.
             </p>
           </div>

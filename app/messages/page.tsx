@@ -40,31 +40,33 @@ export default function MessagesPage() {
       <div className="flex flex-col gap-3">
         <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Messages</p>
         <h1 className="text-4xl font-display text-gradient">Stay in the glow loop</h1>
-        <p className="text-sm text-charcoal/70 max-w-2xl">
+        <p className="text-sm text-charcoal/80 max-w-2xl">
           Chat with your artist, confirm details, and keep every look perfectly timed.
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="glass-panel p-4 space-y-3">
-          {threads.map((thread) => (
-            <button
-              key={thread.id}
-              className={`w-full text-left rounded-2xl px-4 py-3 transition-all ${
-                thread.id === activeThread.id
-                  ? 'bg-white shadow-soft border border-white/80'
-                  : 'hover:bg-white/70'
-              }`}
-              onClick={() => setActiveThread(thread)}
-            >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-medium text-primary">{thread.name}</p>
-                <span className="text-xs text-charcoal/50">{thread.time}</span>
-              </div>
-              <p className="text-xs text-charcoal/60 mt-1">{thread.preview}</p>
-            </button>
-          ))}
-          <div className="card-surface p-4 text-sm text-charcoal/70 flex items-center gap-3">
+        <div className="glass-panel p-4 space-y-4">
+          <div className="flex gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible">
+            {threads.map((thread) => (
+              <button
+                key={thread.id}
+                className={`min-w-[220px] text-left rounded-2xl px-4 py-3 transition-all lg:min-w-0 ${
+                  thread.id === activeThread.id
+                    ? 'bg-white shadow-soft border border-white/80'
+                    : 'hover:bg-white/70'
+                }`}
+                onClick={() => setActiveThread(thread)}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-primary">{thread.name}</p>
+                  <span className="text-xs text-charcoal/50">{thread.time}</span>
+                </div>
+                <p className="text-xs text-charcoal/60 mt-1">{thread.preview}</p>
+              </button>
+            ))}
+          </div>
+          <div className="card-surface p-4 text-sm text-charcoal/80 flex items-center gap-3">
             <Sparkles size={16} className="text-primary" />
             New booking alerts appear here.
           </div>

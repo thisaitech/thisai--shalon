@@ -84,6 +84,13 @@ export const salons: Salon[] = [
         duration: 50
       },
       {
+        id: 'hairstyle',
+        name: 'Hairstyle & Setting Spray',
+        description: 'Bridal updo, curls, and long-hold finish.',
+        price: 90,
+        duration: 60
+      },
+      {
         id: 'beard',
         name: 'Beard Sculpt & Grooming',
         description: 'Line-up, steam towel, conditioning.',
