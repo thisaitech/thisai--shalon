@@ -123,25 +123,31 @@ export default function BookingFlow({ salon }: { salon: Salon }) {
       <StepProgress steps={steps} current={step} />
       <div className="space-y-4">
         <h2 className="text-2xl font-display text-primary">Reserve your glow session</h2>
-        <p className="text-sm text-charcoal/70">
+        <p className="text-sm text-charcoal/80">
           Bridal, groom, and unisex beauty rituals tailored to your schedule.
         </p>
       </div>
-      <div className="grid gap-4">
-        {salon.services.map((service) => (
-          <ServiceItem
-            key={service.id}
-            name={service.name}
-            description={service.description}
-            price={service.price}
-            duration={service.duration}
-            selected={selectedService?.id === service.id}
-            onSelect={() => {
-              setSelectedService(service);
-              setStep(2);
-            }}
-          />
-        ))}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display text-lg text-primary">Choose a service</h3>
+          <span className="pill bg-white/90">Step 1</span>
+        </div>
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
+          {salon.services.map((service) => (
+            <ServiceItem
+              key={service.id}
+              name={service.name}
+              description={service.description}
+              price={service.price}
+              duration={service.duration}
+              selected={selectedService?.id === service.id}
+              onSelect={() => {
+                setSelectedService(service);
+                setStep(2);
+              }}
+            />
+          ))}
+        </div>
       </div>
       <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
         <div className="space-y-3">
