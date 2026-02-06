@@ -132,7 +132,7 @@ export default function BookingFlow({ salon }: { salon: Salon }) {
           <h3 className="font-display text-lg text-primary">Choose a service</h3>
           <span className="pill bg-white/90">Step 1</span>
         </div>
-        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-3 items-stretch auto-rows-fr">
           {salon.services.map((service) => (
             <ServiceItem
               key={service.id}
