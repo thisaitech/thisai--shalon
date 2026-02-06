@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
+import { ensureUserProfile } from '@/lib/firebase/user';
 import { defaultBusinessHours } from '@/lib/utils';
 import Input from '@/components/ui/input';
 import Label from '@/components/ui/label';
@@ -31,6 +32,7 @@ export default function SalonSignupPage() {
     }
     try {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await ensureUserProfile(cred.user, 'owner');
       const salonId = `salon-${cred.user.uid}`;
       await setDoc(doc(db, 'salons', salonId), {
         name: salonName,

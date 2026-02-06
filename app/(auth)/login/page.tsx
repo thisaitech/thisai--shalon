@@ -5,7 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase/client';
+import { auth, db } from '@/lib/firebase/client';
+import { ensureUserProfile } from '@/lib/firebase/user';
 import Input from '@/components/ui/input';
 import Label from '@/components/ui/label';
 import Button from '@/components/ui/button';
@@ -24,13 +25,14 @@ export default function LoginPage() {
     event.preventDefault();
     setLoading(true);
     setError(null);
-    if (!auth) {
+    if (!auth || !db) {
       setError('Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys.');
       setLoading(false);
       return;
     }
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const credential = await signInWithEmailAndPassword(auth, email, password);
+      await ensureUserProfile(credential.user, 'customer');
       document.cookie = 'lumiere_auth=1; path=/';
       router.push(redirectTo);
     } catch (err) {
@@ -73,7 +75,7 @@ export default function LoginPage() {
         <div className="glass rounded-2xl p-10 w-full max-w-md mx-auto">
           <h2 className="text-2xl font-display text-primary">Log in with email</h2>
           <p className="mt-2 text-sm text-charcoal/70">We’ll keep your appointments in sync.</p>
-          {!auth ? (
+          {!auth || !db ? (
             <p className="mt-4 text-sm text-red-600" role="alert">
               Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys in Vercel.
             </p>
@@ -104,7 +106,7 @@ export default function LoginPage() {
                 {error}
               </p>
             ) : null}
-            <Button type="submit" className="w-full" disabled={loading || !auth}>
+            <Button type="submit" className="w-full" disabled={loading || !auth || !db}>
               {loading ? (
                 <span className="flex items-center gap-2">
                   <Spinner className="h-4 w-4 border-white/40 border-t-white" />

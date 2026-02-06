@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase/client';
+import { auth, db } from '@/lib/firebase/client';
+import { ensureUserProfile } from '@/lib/firebase/user';
 import Input from '@/components/ui/input';
 import Label from '@/components/ui/label';
 import Button from '@/components/ui/button';
@@ -21,13 +22,14 @@ export default function SignupPage() {
     event.preventDefault();
     setLoading(true);
     setError(null);
-    if (!auth) {
+    if (!auth || !db) {
       setError('Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys.');
       setLoading(false);
       return;
     }
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const credential = await createUserWithEmailAndPassword(auth, email, password);
+      await ensureUserProfile(credential.user, 'customer');
       document.cookie = 'lumiere_auth=1; path=/';
       router.push('/appointments');
     } catch (err) {
@@ -44,7 +46,7 @@ export default function SignupPage() {
         <p className="mt-2 text-sm text-charcoal/70">
           Book appointments and track your rituals in one place.
         </p>
-        {!auth ? (
+        {!auth || !db ? (
           <p className="mt-4 text-sm text-red-600" role="alert">
             Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys in Vercel.
           </p>
@@ -75,7 +77,7 @@ export default function SignupPage() {
               {error}
             </p>
           ) : null}
-          <Button type="submit" className="w-full" disabled={loading || !auth}>
+          <Button type="submit" className="w-full" disabled={loading || !auth || !db}>
             {loading ? (
               <span className="flex items-center gap-2">
                 <Spinner className="h-4 w-4 border-white/40 border-t-white" />
