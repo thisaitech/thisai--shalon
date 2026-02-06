@@ -3,19 +3,19 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  CalendarClock,
-  HelpCircle,
   Home,
-  Scissors,
+  CalendarCheck,
+  Heart,
+  MessageCircle,
   User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
-  { href: '/salons', label: 'Services', icon: Scissors },
-  { href: '/appointments', label: 'Bookings', icon: CalendarClock },
-  { href: '/help', label: 'Help', icon: HelpCircle },
+  { href: '/booking', label: 'Booking', icon: CalendarCheck },
+  { href: '/favorites', label: 'Saved', icon: Heart },
+  { href: '/messages', label: 'Messages', icon: MessageCircle },
   { href: '/profile', label: 'Profile', icon: User }
 ];
 
@@ -31,7 +31,7 @@ export default function MobileNav() {
   }
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-40 w-[min(520px,94vw)] -translate-x-1/2 rounded-2xl bg-white/90 shadow-glow border border-white/70 px-3 py-2 backdrop-blur-xl md:hidden">
+    <div className="fixed bottom-4 left-1/2 z-40 w-[min(520px,94vw)] -translate-x-1/2 rounded-3xl bg-white/90 shadow-glow border border-white/70 px-3 py-2 backdrop-blur-xl md:hidden">
       <nav className="flex items-center justify-between">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;

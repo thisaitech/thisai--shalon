@@ -31,7 +31,7 @@ export default function SalonCard({
     <Link
       href={`/salon/${id}`}
       className={cn(
-        'group flex flex-col overflow-hidden rounded-2xl bg-white/80 shadow-soft border border-white/40 transition-all hover:-translate-y-1 hover:shadow-lg focus-ring',
+        'group flex flex-col overflow-hidden rounded-3xl bg-white/85 shadow-soft border border-white/60 transition-all hover:-translate-y-1 hover:shadow-glow focus-ring',
         className
       )}
     >
@@ -45,10 +45,10 @@ export default function SalonCard({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink/60 via-transparent to-transparent" />
         <div className="absolute left-4 top-4 flex items-center gap-2">
-          <Badge className="bg-white/90 flex items-center gap-1">
+          <Badge className="bg-white/95 flex items-center gap-1">
             <MapPin size={12} /> {distance}
           </Badge>
-          <Badge className="bg-white/90 flex items-center gap-1">
+          <Badge className="bg-white/95 flex items-center gap-1">
             <Star size={12} /> {rating.toFixed(1)}
           </Badge>
         </div>

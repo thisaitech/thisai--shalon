@@ -29,65 +29,93 @@ export const salons: Salon[] = [
     distance: '0.2 mi',
     image:
       'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1600&q=80',
-    tags: ['Indian Bridal', 'Unisex Styling', 'Beauty Rituals'],
+    tags: ['Indian Bridal', 'Groom Makeover', 'Unisex Styling'],
     rating: 4.9,
-    startingPrice: 35,
+    startingPrice: 40,
     businessHours: defaultBusinessHours,
     services: [
       {
         id: 'bridal',
-        name: 'Indian Bridal Glam',
-        description: 'HD makeup, draping, jewelry set + touch-up kit.',
-        price: 220,
-        duration: 150
+        name: 'Indian Bridal Couture',
+        description: 'HD makeup, saree drape, jewelry set, touch-up kit.',
+        price: 260,
+        duration: 180
+      },
+      {
+        id: 'groom',
+        name: 'Groom Makeover',
+        description: 'Skin prep, haircut, beard sculpt, matte finish.',
+        price: 120,
+        duration: 90
+      },
+      {
+        id: 'reception',
+        name: 'Reception Glam',
+        description: 'Soft glam, contour, lashes, glossy waves.',
+        price: 180,
+        duration: 120
       },
       {
         id: 'sangeet',
         name: 'Sangeet Night Styling',
-        description: 'Soft glam, waves, and long-wear finish.',
-        price: 140,
+        description: 'Long-wear glow, hair styling, dupatta set.',
+        price: 150,
         duration: 90
+      },
+      {
+        id: 'party-makeup',
+        name: 'Party Makeup',
+        description: 'Statement eyes, luminous skin, styled hair.',
+        price: 110,
+        duration: 75
       },
       {
         id: 'mehendi',
         name: 'Mehendi Art',
-        description: 'Intricate bridal & party designs.',
-        price: 75,
+        description: 'Bridal and celebration designs.',
+        price: 80,
         duration: 60
       },
       {
         id: 'unisex-cut',
-        name: 'Unisex Precision Cut',
-        description: 'Texture-focused cut + styling.',
-        price: 45,
-        duration: 45
+        name: 'Unisex Signature Cut',
+        description: 'Precision cut, wash, and blow finish.',
+        price: 50,
+        duration: 50
       },
       {
         id: 'beard',
-        name: 'Groom Beard Sculpt',
-        description: 'Line-up, steam, and conditioning.',
-        price: 35,
-        duration: 30
+        name: 'Beard Sculpt & Grooming',
+        description: 'Line-up, steam towel, conditioning.',
+        price: 40,
+        duration: 35
       },
       {
         id: 'hairspa',
         name: 'Ayurvedic Hair Spa',
-        description: 'Herbal cleanse and scalp therapy.',
-        price: 65,
+        description: 'Scalp detox, oils, and steam therapy.',
+        price: 70,
         duration: 60
+      },
+      {
+        id: 'smoothening',
+        name: 'Keratin & Smoothening',
+        description: 'Frizz control + silk finish.',
+        price: 160,
+        duration: 120
       },
       {
         id: 'skin',
         name: 'Radiance Facial',
         description: 'Brightening ritual + hydration veil.',
-        price: 80,
+        price: 85,
         duration: 60
       },
       {
         id: 'nails',
         name: 'Nail Art & Gel',
         description: 'Custom art, shaping, and gloss finish.',
-        price: 55,
+        price: 60,
         duration: 50
       }
     ]

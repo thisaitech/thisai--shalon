@@ -6,14 +6,15 @@ import { Menu, X } from 'lucide-react';
 
 const links = [
   { href: '/', label: 'Home' },
-  { href: '/salons', label: 'Services' },
-  { href: '/appointments', label: 'Appointments' },
-  { href: '/help', label: 'Help' }
+  { href: '/booking', label: 'Booking' },
+  { href: '/favorites', label: 'Saved' },
+  { href: '/messages', label: 'Messages' },
+  { href: '/profile', label: 'Profile' }
 ];
 
 export default function Navbar() {
   return (
-    <Disclosure as="nav" className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 border-b border-white/50">
+    <Disclosure as="nav" className="sticky top-0 z-50 backdrop-blur-xl bg-white/70 border-b border-white/60">
       {({ open }) => (
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between relative">
           <Link href="/" className="text-xl font-display tracking-wide text-primary">
@@ -34,14 +35,11 @@ export default function Navbar() {
             <Link href="/login" className="text-sm focus-ring rounded-md px-1 text-primary">
               Log in
             </Link>
-            <Link href="/owner/login" className="text-sm focus-ring rounded-md px-1 text-primary/70">
-              Owner
-            </Link>
             <Link
-              href="/signup"
-              className="min-h-[48px] rounded-2xl bg-primary text-white px-5 py-3 text-sm font-medium focus-ring"
+              href="/booking"
+              className="min-h-[48px] rounded-2xl bg-gradient-to-r from-primary via-lilac to-accent text-white px-5 py-3 text-sm font-medium focus-ring shadow-glow"
             >
-              Get started
+              Book now
             </Link>
           </div>
           <Disclosure.Button
@@ -65,14 +63,11 @@ export default function Navbar() {
                 <Link href="/login" className="text-sm focus-ring rounded-md px-1 text-primary">
                   Log in
                 </Link>
-                <Link href="/owner/login" className="text-sm focus-ring rounded-md px-1 text-primary/70">
-                  Owner
-                </Link>
                 <Link
-                  href="/signup"
-                  className="min-h-[44px] rounded-2xl bg-primary text-white px-4 py-2 text-sm"
+                  href="/booking"
+                  className="min-h-[44px] rounded-2xl bg-gradient-to-r from-primary via-lilac to-accent text-white px-4 py-2 text-sm"
                 >
-                  Get started
+                  Book now
                 </Link>
               </div>
             </div>

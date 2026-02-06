@@ -53,7 +53,7 @@ export default function Carousel({
           <button
             type="button"
             onClick={() => goTo(index - 1)}
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/80 shadow-soft flex items-center justify-center focus-ring"
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/85 shadow-soft flex items-center justify-center focus-ring"
             aria-label="Previous slide"
           >
             <ChevronLeft size={18} />
@@ -61,7 +61,7 @@ export default function Carousel({
           <button
             type="button"
             onClick={() => goTo(index + 1)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/80 shadow-soft flex items-center justify-center focus-ring"
+            className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/85 shadow-soft flex items-center justify-center focus-ring"
             aria-label="Next slide"
           >
             <ChevronRight size={18} />
@@ -74,7 +74,9 @@ export default function Carousel({
                 onClick={() => goTo(dotIndex)}
                 className={cn(
                   'h-2.5 w-2.5 rounded-full transition-all',
-                  dotIndex === index ? 'bg-primary' : 'bg-primary/30'
+                  dotIndex === index
+                    ? 'bg-gradient-to-r from-primary to-accent shadow-soft'
+                    : 'bg-primary/20'
                 )}
                 aria-label={`Go to slide ${dotIndex + 1}`}
               />

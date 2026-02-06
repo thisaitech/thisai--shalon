@@ -23,8 +23,8 @@ export default function ServiceItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        'w-full text-left rounded-2xl border border-transparent bg-white/80 p-4 transition-all hover:border-primary/40 hover:-translate-y-0.5 focus-ring',
-        selected && 'border-primary bg-white shadow-soft'
+        'w-full text-left rounded-3xl border border-white/70 bg-white/85 p-5 transition-all hover:-translate-y-0.5 hover:shadow-glow focus-ring',
+        selected && 'border-primary/40 bg-white shadow-glow'
       )}
     >
       <div className="flex items-start justify-between">
@@ -32,9 +32,11 @@ export default function ServiceItem({
           <p className="font-medium text-primary">{name}</p>
           <p className="text-sm text-charcoal/70">{description}</p>
         </div>
-        <div className="text-right">
+        <div className="text-right space-y-1">
           <p className="text-sm font-medium">{formatCurrency(price)}</p>
-          <p className="text-xs text-charcoal/60">{duration} min</p>
+          <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-xs text-primary">
+            {duration} min
+          </span>
         </div>
       </div>
     </button>

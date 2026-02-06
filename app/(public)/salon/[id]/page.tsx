@@ -30,9 +30,9 @@ export default function SalonDetailPage({ params }: { params: { id: string } }) 
 
       <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
         <div className="space-y-6">
-          <Carousel className="rounded-2xl">
+          <Carousel className="rounded-3xl">
             {gallery.map((image) => (
-              <div key={image} className="relative h-80 w-full overflow-hidden rounded-2xl">
+              <div key={image} className="relative h-80 w-full overflow-hidden rounded-3xl">
                 <Image
                   src={image}
                   alt={salon.name}
@@ -67,7 +67,7 @@ export default function SalonDetailPage({ params }: { params: { id: string } }) 
             ].map(({ label, icon: Icon }) => (
               <button
                 key={label}
-                className="card-surface px-3 py-4 flex flex-col items-center gap-2 text-sm"
+                className="card-spotlight px-3 py-4 flex flex-col items-center gap-2 text-sm"
               >
                 <Icon size={18} className="text-primary" />
                 {label}
@@ -87,10 +87,10 @@ export default function SalonDetailPage({ params }: { params: { id: string } }) 
           </div>
         </div>
 
-        <div className="glass rounded-2xl p-6">
+        <div className="glass-panel rounded-2xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-display text-primary">Book appointment</h2>
-            <Badge className="bg-accent/30 text-primary">Instant</Badge>
+            <Badge className="bg-primary/15 text-primary">Instant</Badge>
           </div>
           <BookingFlow salon={salon} />
         </div>

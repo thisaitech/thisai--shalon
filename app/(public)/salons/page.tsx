@@ -10,14 +10,14 @@ export default function ServicesPage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Services</p>
-          <h1 className="text-3xl font-display text-primary">Indian bridal + unisex menu</h1>
+          <h1 className="text-4xl font-display text-gradient">Indian bridal + unisex menu</h1>
           <p className="text-sm text-charcoal/70 mt-2">
             Explore curated service styles and reserve an appointment instantly.
           </p>
         </div>
         <Link
           href={`/booking?salon=${salon.id}`}
-          className="inline-flex items-center justify-center min-h-[48px] rounded-2xl bg-primary text-white px-5 py-3 text-sm font-medium"
+          className="inline-flex items-center justify-center min-h-[48px] rounded-2xl bg-gradient-to-r from-primary via-lilac to-accent text-white px-5 py-3 text-sm font-medium shadow-glow"
         >
           Book appointment
         </Link>
@@ -35,7 +35,7 @@ export default function ServicesPage() {
         ))}
       </div>
 
-      <div className="glass rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="glass-panel rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <div>
           <p className="text-sm text-charcoal/70">Need a custom bridal package?</p>
           <p className="font-display text-lg text-primary">We tailor every look for the ceremony.</p>

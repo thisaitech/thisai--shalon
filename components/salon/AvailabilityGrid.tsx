@@ -20,7 +20,7 @@ export default function AvailabilityGrid({
 }) {
   if (!date) {
     return (
-      <div className="rounded-2xl border border-dashed border-charcoal/20 p-6 text-center text-sm text-charcoal/60">
+      <div className="rounded-2xl border border-dashed border-primary/20 bg-white/60 p-6 text-center text-sm text-charcoal/60">
         Pick a date to reveal available times.
       </div>
     );
@@ -35,7 +35,7 @@ export default function AvailabilityGrid({
 
   if (!timeSlots.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-charcoal/20 p-6 text-center text-sm text-charcoal/60">
+      <div className="rounded-2xl border border-dashed border-primary/20 bg-white/60 p-6 text-center text-sm text-charcoal/60">
         Closed on this day. Try another date.
       </div>
     );
@@ -54,10 +54,10 @@ export default function AvailabilityGrid({
             onClick={() => onSelect(slot)}
             aria-pressed={isSelected}
             className={cn(
-              'px-4 py-3 rounded-xl text-sm transition-all min-h-[48px] focus-ring',
-              isSelected && 'bg-primary text-white shadow-md',
-              isBooked && 'bg-gray-100 text-gray-400 cursor-not-allowed',
-              !isSelected && !isBooked && 'bg-white/70 hover:bg-secondary'
+              'px-4 py-3 rounded-2xl text-sm transition-all min-h-[48px] focus-ring shadow-soft',
+              isSelected && 'bg-gradient-to-r from-primary via-lilac to-accent text-white shadow-glow',
+              isBooked && 'bg-white/70 text-charcoal/40 cursor-not-allowed',
+              !isSelected && !isBooked && 'bg-white/80 hover:bg-white'
             )}
           >
             {formatTime(slot)}

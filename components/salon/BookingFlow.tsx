@@ -122,8 +122,10 @@ export default function BookingFlow({ salon }: { salon: Salon }) {
     <div className="space-y-6">
       <StepProgress steps={steps} current={step} />
       <div className="space-y-4">
-        <h2 className="text-2xl font-display text-primary">Reserve your zen moment</h2>
-        <p className="text-sm text-charcoal/70">Your glow-up awaits.</p>
+        <h2 className="text-2xl font-display text-primary">Reserve your glow session</h2>
+        <p className="text-sm text-charcoal/70">
+          Bridal, groom, and unisex beauty rituals tailored to your schedule.
+        </p>
       </div>
       <div className="grid gap-4">
         {salon.services.map((service) => (
@@ -165,7 +167,7 @@ export default function BookingFlow({ salon }: { salon: Salon }) {
           />
         </div>
       </div>
-      <div className="rounded-2xl border border-white/50 bg-white/80 p-5 space-y-4">
+      <div className="rounded-2xl border border-white/70 bg-white/85 p-5 space-y-4 shadow-soft">
         <h3 className="font-display text-lg text-primary">Confirm</h3>
         {summary ? (
           <div className="space-y-2 text-sm text-charcoal/70">

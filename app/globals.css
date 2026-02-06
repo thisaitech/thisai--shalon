@@ -15,8 +15,9 @@
 
   body {
     @apply bg-secondary text-charcoal font-sans antialiased;
-    background-image: radial-gradient(circle at 20% 20%, rgba(246, 176, 146, 0.2), transparent 40%),
-      radial-gradient(circle at 80% 0%, rgba(120, 213, 198, 0.2), transparent 40%);
+    background-image: radial-gradient(circle at 15% 10%, rgba(108, 92, 231, 0.2), transparent 45%),
+      radial-gradient(circle at 85% 5%, rgba(174, 230, 255, 0.25), transparent 45%),
+      radial-gradient(circle at 50% 80%, rgba(255, 159, 178, 0.18), transparent 45%);
   }
 
   h1, h2, h3, h4 {
@@ -30,7 +31,7 @@
 
 @layer utilities {
   .glass {
-    @apply bg-white/80 backdrop-blur-xl border border-white/40 shadow-soft;
+    @apply bg-white/80 backdrop-blur-xl border border-white/60 shadow-soft;
   }
 
   .text-balance {
@@ -38,7 +39,7 @@
   }
 
   .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-secondary;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-secondary;
   }
 
   .shimmer {
@@ -47,15 +48,35 @@
   }
 
   .chip {
-    @apply inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-xs font-medium text-charcoal/70 shadow-soft;
+    @apply inline-flex items-center gap-2 rounded-full bg-white/85 px-4 py-2 text-xs font-medium text-charcoal/70 shadow-soft;
   }
 
   .pill {
-    @apply rounded-full bg-white/80 px-4 py-2 text-sm text-charcoal/70 shadow-soft;
+    @apply rounded-full bg-white/85 px-4 py-2 text-sm text-charcoal/70 shadow-soft;
   }
 
   .card-surface {
-    @apply rounded-2xl bg-white/80 border border-white/50 shadow-soft;
+    @apply rounded-2xl bg-white/85 border border-white/60 shadow-soft;
+  }
+
+  .card-spotlight {
+    @apply rounded-2xl bg-gradient-to-br from-white via-white/90 to-white/70 border border-white/70 shadow-glow;
+  }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary via-lilac to-accent bg-clip-text text-transparent;
+  }
+
+  .icon-orb {
+    @apply flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-soft;
+  }
+
+  .app-shell {
+    @apply bg-hero-glow;
+  }
+
+  .glass-panel {
+    @apply rounded-2xl border border-white/70 bg-white/75 shadow-glow backdrop-blur-xl;
   }
 }
 
@@ -69,19 +90,19 @@
 }
 
 .react-datepicker__header {
-  background-color: #F7F3EE;
-  border-bottom: 1px solid #E6DED8;
+  background-color: #F5F3FF;
+  border-bottom: 1px solid #E8E3F9;
   padding-top: 0.75rem;
 }
 
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-  background-color: #1F2A44;
+  background-color: #6C5CE7;
   color: #fff;
 }
 
 .react-datepicker__day:hover {
-  background-color: rgba(31, 42, 68, 0.12);
+  background-color: rgba(108, 92, 231, 0.12);
 }
 
 .react-datepicker__day--disabled {
@@ -100,9 +121,9 @@
   position: absolute;
   inset: -20% 0 auto 0;
   height: 200px;
-  background-image: radial-gradient(circle, rgba(246, 176, 146, 0.5) 20%, transparent 20%),
-    radial-gradient(circle, rgba(120, 213, 198, 0.45) 20%, transparent 20%),
-    radial-gradient(circle, rgba(31, 42, 68, 0.2) 20%, transparent 20%);
+  background-image: radial-gradient(circle, rgba(108, 92, 231, 0.45) 20%, transparent 20%),
+    radial-gradient(circle, rgba(255, 159, 178, 0.4) 20%, transparent 20%),
+    radial-gradient(circle, rgba(174, 230, 255, 0.35) 20%, transparent 20%);
   background-size: 18px 18px, 22px 22px, 26px 26px;
   animation: float 8s linear infinite;
   opacity: 0.6;

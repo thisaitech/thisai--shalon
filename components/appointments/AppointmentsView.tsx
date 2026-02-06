@@ -71,7 +71,7 @@ export default function AppointmentsView({ title }: { title: string }) {
     <div className="max-w-5xl mx-auto px-6 py-12 space-y-6">
       <div>
         <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Appointments</p>
-        <h1 className="text-3xl font-display text-primary">{title}</h1>
+        <h1 className="text-4xl font-display text-gradient">{title}</h1>
       </div>
 
       {loading ? (
@@ -80,11 +80,11 @@ export default function AppointmentsView({ title }: { title: string }) {
           <Skeleton className="h-24" />
         </div>
       ) : error ? (
-        <div className="glass rounded-2xl p-6 text-sm text-red-600" role="alert">
+        <div className="glass-panel rounded-2xl p-6 text-sm text-red-600" role="alert">
           {error}
         </div>
       ) : appointments.length === 0 ? (
-        <div className="glass rounded-2xl p-10 text-center">
+        <div className="glass-panel rounded-2xl p-10 text-center">
           <p className="font-display text-lg text-primary">No appointments yet.</p>
           <p className="text-sm text-charcoal/60">Your chair awaits.</p>
         </div>
@@ -93,7 +93,7 @@ export default function AppointmentsView({ title }: { title: string }) {
           {appointments.map((appointment) => (
             <div
               key={appointment.id}
-              className="glass rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+              className="glass-panel rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
             >
               <div>
                 <p className="font-medium">{appointment.serviceName}</p>
