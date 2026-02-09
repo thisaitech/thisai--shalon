@@ -32,8 +32,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
-      <body>
+    <html
+      lang="en"
+      className={`${inter.variable} ${playfair.variable}`}
+      suppressHydrationWarning
+    >
+      <body suppressHydrationWarning>
         <div className="min-h-screen flex flex-col app-shell">
           <NavProgress />
           <BootSplash />
