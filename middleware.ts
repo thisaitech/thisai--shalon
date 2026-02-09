@@ -2,6 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // First-run onboarding: send users to /welcome once.
+  if (pathname === '/') {
+    const onboarded = request.cookies.get('lumiere_onboarded')?.value;
+    if (!onboarded) {
+      return NextResponse.redirect(new URL('/welcome', request.url));
+    }
+  }
+
   const protectedPaths = [
     '/dashboard',
     '/appointments',
@@ -23,6 +32,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/',
     '/dashboard/:path*',
     '/appointments/:path*',
     '/favorites/:path*',
