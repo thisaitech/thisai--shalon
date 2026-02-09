@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
-import { createAppointment, type PaymentInfo } from '@/lib/server/appointments';
+import {
+  createAppointment,
+  getBookedTimesForSalonDate,
+  type PaymentInfo
+} from '@/lib/server/appointments';
 
 export async function GET(req: NextRequest) {
   try {
@@ -24,15 +28,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing salonId or date' }, { status: 400 });
     }
 
-    const adminDb = getAdminDb();
-    const snapshot = await adminDb
-      .collection('appointments')
-      .where('salonId', '==', salonId)
-      .where('date', '==', date)
-      .where('status', 'in', ['pending', 'confirmed'])
-      .get();
-
-    const bookedTimes = snapshot.docs.map((doc) => doc.data().time as string);
+    // This helper includes fallbacks to avoid composite-index failures in early-stage projects.
+    const bookedTimes = await getBookedTimesForSalonDate({ salonId, date });
 
     return NextResponse.json({ bookedTimes });
   } catch (error) {

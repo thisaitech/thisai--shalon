@@ -26,6 +26,77 @@ export type PaymentInfo =
       provider: 'manual';
     };
 
+function isIndexError(error: unknown) {
+  const err = error as { code?: unknown; message?: unknown };
+  const message = String(err?.message ?? '');
+  return (
+    err?.code === 9 || // FAILED_PRECONDITION (gRPC)
+    message.toLowerCase().includes('requires an index') ||
+    message.toLowerCase().includes('failed_precondition')
+  );
+}
+
+async function listActiveAppointmentsForSalonDate({
+  salonId,
+  date
+}: {
+  salonId: string;
+  date: string;
+}) {
+  const adminDb = getAdminDb();
+
+  // Fast path (may require composite indexes depending on project settings).
+  try {
+    const snapshot = await adminDb
+      .collection('appointments')
+      .where('salonId', '==', salonId)
+      .where('date', '==', date)
+      .where('status', 'in', ['pending', 'confirmed'])
+      .get();
+
+    return snapshot.docs.map((doc) => doc.data() as { time: string; duration: number; status?: string });
+  } catch (error) {
+    if (!isIndexError(error)) throw error;
+  }
+
+  // Fallback 1: remove the `in` filter and filter in memory.
+  try {
+    const snapshot = await adminDb
+      .collection('appointments')
+      .where('salonId', '==', salonId)
+      .where('date', '==', date)
+      .get();
+
+    return snapshot.docs
+      .map((doc) => doc.data() as { time: string; duration: number; status?: string })
+      .filter((item) => ['pending', 'confirmed'].includes(String(item.status ?? '')));
+  } catch (error) {
+    if (!isIndexError(error)) throw error;
+  }
+
+  // Fallback 2: query by salon only (no composite index needed), then filter.
+  const snapshot = await adminDb
+    .collection('appointments')
+    .where('salonId', '==', salonId)
+    .get();
+
+  return snapshot.docs
+    .map((doc) => doc.data() as { time: string; duration: number; status?: string; date?: string })
+    .filter((item) => item.date === date)
+    .filter((item) => ['pending', 'confirmed'].includes(String(item.status ?? '')));
+}
+
+export async function getBookedTimesForSalonDate({
+  salonId,
+  date
+}: {
+  salonId: string;
+  date: string;
+}) {
+  const items = await listActiveAppointmentsForSalonDate({ salonId, date });
+  return items.map((item) => item.time).filter(Boolean);
+}
+
 export async function createAppointment({
   salonId,
   serviceId,
@@ -68,17 +139,8 @@ export async function createAppointment({
     throw new Error('Outside business hours');
   }
 
-  const existing = await adminDb
-    .collection('appointments')
-    .where('salonId', '==', salonId)
-    .where('date', '==', date)
-    .where('status', 'in', ['pending', 'confirmed'])
-    .get();
-
-  const hasOverlap = existing.docs.some((doc) => {
-    const data = doc.data() as { time: string; duration: number };
-    return isOverlapping(time, duration, data.time, data.duration);
-  });
+  const existing = await listActiveAppointmentsForSalonDate({ salonId, date });
+  const hasOverlap = existing.some((item) => isOverlapping(time, duration, item.time, item.duration));
 
   if (hasOverlap) {
     const conflict = new Error('Selected time is no longer available');
@@ -133,4 +195,3 @@ export async function createAppointment({
 
   return { id: appointmentRef.id };
 }
-
