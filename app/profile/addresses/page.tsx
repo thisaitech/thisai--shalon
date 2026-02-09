@@ -42,7 +42,7 @@ export default function AddressesPage() {
           <div className="rounded-[34px] bg-white/92 shadow-soft border border-white/70 p-5 space-y-4 animate-fade-up">
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-start gap-3">
-                <span className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center">
+                <span className="h-12 w-12 rounded-2xl bg-sky/30 text-primary grid place-items-center shadow-soft">
                   <MapPin size={18} />
                 </span>
                 <div>
@@ -76,4 +76,3 @@ export default function AddressesPage() {
     </div>
   );
 }
-

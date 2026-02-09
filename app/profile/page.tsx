@@ -128,16 +128,24 @@ export default function ProfileOverviewPage() {
 
         <section className="space-y-3">
           <div className="rounded-[34px] overflow-hidden border border-white/70 shadow-glow">
-            <div className="bg-gradient-to-r from-rose-600 via-red-600 to-orange-500 p-5">
+            <div className="relative bg-gradient-to-r from-primary via-lilac to-ink p-5">
+              <div
+                className="pointer-events-none absolute inset-0 opacity-80"
+                aria-hidden="true"
+                style={{
+                  background:
+                    'radial-gradient(circle at 20% 10%, rgba(255, 213, 158, 0.22), transparent 45%), radial-gradient(circle at 85% 0%, rgba(174, 230, 255, 0.18), transparent 50%)'
+                }}
+              />
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4 min-w-0">
                   <div className="relative h-14 w-14 shrink-0 rounded-2xl bg-white grid place-items-center shadow-soft">
-                    <span className="text-2xl font-semibold text-rose-700">{avatarLetter}</span>
+                    <span className="text-2xl font-semibold text-primary">{avatarLetter}</span>
                     <span className="absolute -right-1 -bottom-1 h-6 w-6 rounded-full bg-white grid place-items-center shadow-soft">
                       <CheckCircle2 size={16} className="text-emerald-500" />
                     </span>
                   </div>
-                  <div className="min-w-0 text-white">
+                  <div className="relative min-w-0 text-white">
                     <p className="text-lg font-semibold truncate">
                       {loading ? 'Loading...' : displayName}
                     </p>
@@ -161,7 +169,7 @@ export default function ProfileOverviewPage() {
             <div className="bg-white/92 p-4">
               <div className="rounded-3xl bg-secondary/60 border border-white/70 shadow-soft p-4 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="h-11 w-11 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center">
+                  <span className="h-11 w-11 rounded-2xl bg-sky/30 text-primary grid place-items-center shadow-soft">
                     <MapPin size={18} />
                   </span>
                   <div className="min-w-0">
@@ -173,7 +181,7 @@ export default function ProfileOverviewPage() {
                 </div>
                 <Link
                   href="/profile/edit"
-                  className="shrink-0 rounded-2xl bg-white/85 border border-white/70 px-4 py-2 text-xs font-semibold text-rose-600 shadow-soft focus-ring"
+                  className="shrink-0 rounded-2xl bg-primary/10 border border-primary/15 px-4 py-2 text-xs font-semibold text-primary shadow-soft focus-ring"
                 >
                   Change
                 </Link>
@@ -185,7 +193,7 @@ export default function ProfileOverviewPage() {
         <section className="rounded-[34px] bg-white/92 shadow-soft border border-white/70 p-4">
           <div className="grid grid-cols-4 gap-2">
             <div className="text-center">
-              <div className="mx-auto h-12 w-12 rounded-2xl bg-sky-50 text-sky-700 grid place-items-center">
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-sky/30 text-primary grid place-items-center shadow-soft">
                 <ReceiptText size={18} />
               </div>
               <p className="mt-2 text-lg font-semibold text-ink">
@@ -194,21 +202,21 @@ export default function ProfileOverviewPage() {
               <p className="text-[11px] text-charcoal/55">Orders</p>
             </div>
             <div className="text-center">
-              <div className="mx-auto h-12 w-12 rounded-2xl bg-amber-50 text-amber-700 grid place-items-center">
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-highlight/60 text-ink grid place-items-center shadow-soft">
                 <Gem size={18} />
               </div>
               <p className="mt-2 text-lg font-semibold text-ink">{points}</p>
               <p className="text-[11px] text-charcoal/55">Points</p>
             </div>
             <div className="text-center">
-              <div className="mx-auto h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center">
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-accent/18 text-primary grid place-items-center shadow-soft">
                 <Wallet size={18} />
               </div>
               <p className="mt-2 text-lg font-semibold text-ink">{formatCurrency(wallet)}</p>
               <p className="text-[11px] text-charcoal/55">Wallet</p>
             </div>
             <div className="text-center">
-              <div className="mx-auto h-12 w-12 rounded-2xl bg-rose-50 text-rose-700 grid place-items-center">
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-primary/10 text-primary grid place-items-center shadow-soft">
                 <Heart size={18} />
               </div>
               <p className="mt-2 text-lg font-semibold text-ink">{wishlist}</p>
@@ -218,12 +226,12 @@ export default function ProfileOverviewPage() {
         </section>
 
         <section className="rounded-[34px] overflow-hidden border border-white/70 shadow-glow">
-          <div className="relative bg-gradient-to-r from-[#0B0B16] via-[#13132A] to-[#0B0B16] p-5 text-white">
-            <div className="absolute -left-16 -top-20 h-56 w-56 rounded-full bg-yellow-400/10 blur-3xl" />
-            <div className="absolute -right-16 -bottom-24 h-72 w-72 rounded-full bg-primary/18 blur-3xl" />
+          <div className="relative bg-gradient-to-r from-ink via-primary/45 to-ink p-5 text-white">
+            <div className="absolute -left-16 -top-20 h-56 w-56 rounded-full bg-highlight/18 blur-3xl" />
+            <div className="absolute -right-16 -bottom-24 h-72 w-72 rounded-full bg-sky/14 blur-3xl" />
             <div className="relative flex items-center justify-between gap-4">
               <div className="flex items-start gap-3">
-                <span className="h-11 w-11 rounded-2xl bg-yellow-300/15 text-yellow-200 grid place-items-center">
+                <span className="h-11 w-11 rounded-2xl bg-highlight/18 text-highlight grid place-items-center">
                   <Gem size={18} />
                 </span>
                 <div>
@@ -235,7 +243,7 @@ export default function ProfileOverviewPage() {
               </div>
               <Link
                 href="/help"
-                className="rounded-2xl bg-yellow-300 text-black px-4 py-2 text-xs font-semibold shadow-soft focus-ring"
+                className="rounded-2xl bg-highlight text-ink px-4 py-2 text-xs font-semibold shadow-soft focus-ring"
               >
                 Try Free
               </Link>
@@ -253,7 +261,7 @@ export default function ProfileOverviewPage() {
               className="flex items-center justify-between rounded-3xl px-4 py-4 hover:bg-secondary/40 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="h-11 w-11 rounded-2xl bg-rose-50 text-rose-700 grid place-items-center">
+                <span className="h-11 w-11 rounded-2xl bg-primary/10 text-primary grid place-items-center">
                   <Pencil size={18} />
                 </span>
                 <span className="text-sm font-medium text-ink">Edit Profile</span>
@@ -266,7 +274,7 @@ export default function ProfileOverviewPage() {
               className="flex items-center justify-between rounded-3xl px-4 py-4 hover:bg-secondary/40 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="h-11 w-11 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center">
+                <span className="h-11 w-11 rounded-2xl bg-sky/30 text-primary grid place-items-center">
                   <MapPin size={18} />
                 </span>
                 <span className="text-sm font-medium text-ink">My Address</span>
@@ -279,13 +287,13 @@ export default function ProfileOverviewPage() {
               className="flex items-center justify-between rounded-3xl px-4 py-4 hover:bg-secondary/40 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="h-11 w-11 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center">
+                <span className="h-11 w-11 rounded-2xl bg-accent/18 text-primary grid place-items-center">
                   <Wallet size={18} />
                 </span>
                 <span className="text-sm font-medium text-ink">Wallet</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold text-emerald-700">{formatCurrency(wallet)}</span>
+                <span className="text-sm font-semibold text-primary">{formatCurrency(wallet)}</span>
                 <ChevronRight size={18} className="text-charcoal/40" />
               </div>
             </Link>
@@ -295,7 +303,7 @@ export default function ProfileOverviewPage() {
               className="flex items-center justify-between rounded-3xl px-4 py-4 hover:bg-secondary/40 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="h-11 w-11 rounded-2xl bg-sky-50 text-sky-700 grid place-items-center">
+                <span className="h-11 w-11 rounded-2xl bg-highlight/60 text-ink grid place-items-center">
                   <ReceiptText size={18} />
                 </span>
                 <span className="text-sm font-medium text-ink">Help & Support</span>
@@ -309,7 +317,7 @@ export default function ProfileOverviewPage() {
               className="w-full flex items-center justify-between rounded-3xl px-4 py-4 hover:bg-secondary/40 transition-colors"
             >
               <div className="flex items-center gap-3">
-                <span className="h-11 w-11 rounded-2xl bg-charcoal/5 text-charcoal grid place-items-center">
+                <span className="h-11 w-11 rounded-2xl bg-charcoal/5 text-ink grid place-items-center">
                   <LogOut size={18} />
                 </span>
                 <span className="text-sm font-medium text-ink">Sign out</span>
@@ -330,7 +338,7 @@ export default function ProfileOverviewPage() {
           <button
             type="button"
             className={cn(
-              'h-12 w-12 rounded-full bg-gradient-to-br from-rose-500 to-red-500 text-white shadow-glow',
+              'h-12 w-12 rounded-full bg-gradient-to-br from-primary via-lilac to-accent text-white shadow-glow',
               'grid place-items-center text-xs font-semibold'
             )}
             aria-label="Language"

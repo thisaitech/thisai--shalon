@@ -39,7 +39,7 @@ export default function WalletPage() {
           <div className="space-y-4">
             <div className="rounded-[34px] bg-white/92 shadow-soft border border-white/70 p-5 space-y-4 animate-fade-up">
               <div className="flex items-center gap-3">
-                <span className="h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center">
+                <span className="h-12 w-12 rounded-2xl bg-accent/18 text-primary grid place-items-center shadow-soft">
                   <WalletIcon size={18} />
                 </span>
                 <div>
@@ -56,7 +56,7 @@ export default function WalletPage() {
 
             <div className="rounded-[34px] bg-white/92 shadow-soft border border-white/70 p-5 space-y-4 animate-fade-up [animation-delay:80ms]">
               <div className="flex items-center gap-3">
-                <span className="h-12 w-12 rounded-2xl bg-amber-50 text-amber-700 grid place-items-center">
+                <span className="h-12 w-12 rounded-2xl bg-highlight/60 text-ink grid place-items-center shadow-soft">
                   <Gem size={18} />
                 </span>
                 <div>
@@ -78,4 +78,3 @@ export default function WalletPage() {
     </div>
   );
 }
-
