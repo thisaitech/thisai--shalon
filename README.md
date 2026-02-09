@@ -7,6 +7,9 @@ A minimalist, design-forward booking experience built with Next.js, Firebase, Ta
 2. Populate Firebase/Resend keys
 3. `npm install && npm run dev`
 
+If you see missing chunk 404s like `/_next/static/chunks/... 404`, run:
+- `npm run dev:clean`
+
 ## 🌐 Deployment
 Vercel (frontend) + Firebase (backend)
 
