@@ -8,9 +8,15 @@
     "dev:clean": "npm run clean:next && next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "cap:add:android": "npx cap add android",
+    "cap:sync:android": "npx cap sync android",
+    "apk:debug": "npx cap sync android && (cd android && ./gradlew assembleDebug)"
   },
   "dependencies": {
+    "@capacitor/android": "^7.4.5",
+    "@capacitor/cli": "^7.4.5",
+    "@capacitor/core": "^7.4.5",
     "@headlessui/react": "^1.7.19",
     "@react-email/components": "^0.0.22",
     "firebase": "^10.14.1",

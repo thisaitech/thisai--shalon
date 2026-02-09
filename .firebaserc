@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "thisai-salon"
-  }
+  },
+  "targets": {
+    "thisai-salon": {
+      "hosting": {
+        "thisai-salon-c783a": [
+          "thisai-salon-c783a"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
