@@ -8,10 +8,17 @@ export type UserProfile = {
   firstName: string;
   lastName: string;
   phone: string;
+  location?: string;
+  pincode?: string;
   role: 'customer' | 'owner';
   preferences: {
     reminders: boolean;
     marketing: boolean;
+  };
+  stats?: {
+    points: number;
+    wallet: number;
+    wishlist: number;
   };
   createdAt: string;
   updatedAt?: string;
@@ -29,10 +36,17 @@ export async function ensureUserProfile(user: User, role: UserProfile['role']) {
       firstName: '',
       lastName: '',
       phone: '',
+      location: '',
+      pincode: '',
       role,
       preferences: {
         reminders: true,
         marketing: false
+      },
+      stats: {
+        points: 250,
+        wallet: 500,
+        wishlist: 8
       },
       createdAt: now,
       updatedAt: now
@@ -41,11 +55,21 @@ export async function ensureUserProfile(user: User, role: UserProfile['role']) {
   }
 
   const data = snap.data();
+  const defaults: Partial<UserProfile> = {};
+  if (typeof data.location !== 'string') defaults.location = '';
+  if (typeof data.pincode !== 'string') defaults.pincode = '';
+  if (!data.stats) {
+    defaults.stats = { points: 250, wallet: 500, wishlist: 8 };
+  }
   if (!data.role || data.role !== role) {
-    await setDoc(ref, { role }, { merge: true });
+    defaults.role = role;
   }
   if (!data.email && user.email) {
-    await setDoc(ref, { email: user.email }, { merge: true });
+    defaults.email = user.email;
+  }
+
+  if (Object.keys(defaults).length) {
+    await setDoc(ref, defaults, { merge: true });
   }
 }
 

@@ -1,330 +1,342 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebase/client';
-import { updateUserProfile, type UserProfile } from '@/lib/firebase/user';
+import {
+  Bell,
+  CheckCircle2,
+  ChevronRight,
+  Gem,
+  Heart,
+  MapPin,
+  Pencil,
+  ReceiptText,
+  Wallet,
+  LogOut
+} from 'lucide-react';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
 import CustomerContainer from '@/components/layout/CustomerContainer';
-import Button from '@/components/ui/button';
-import Input from '@/components/ui/input';
-import Label from '@/components/ui/label';
-import Spinner from '@/components/ui/spinner';
-import Skeleton from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
+import { cn, formatCurrency } from '@/lib/utils';
+import { useUserProfile } from '@/lib/firebase/useUserProfile';
+import { auth, db } from '@/lib/firebase/client';
 
-type ProfileForm = {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  reminders: boolean;
-  marketing: boolean;
-};
+function formatLocation(location?: string, pincode?: string) {
+  const city = (location || '').trim();
+  const pin = (pincode || '').trim();
+  if (city && pin) return `${city} - ${pin}`;
+  return city || pin || 'Add your location';
+}
 
-export default function ProfilePage() {
-  const [form, setForm] = useState<ProfileForm>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    reminders: true,
-    marketing: false
-  });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
-
-  const lastNameRef = useRef<HTMLInputElement | null>(null);
-  const phoneRef = useRef<HTMLInputElement | null>(null);
+export default function ProfileOverviewPage() {
+  const { user, profile, loading, error } = useUserProfile();
+  const [orders, setOrders] = useState<number>(0);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!auth || !db) {
-      setError('Firebase is not configured. Add your NEXT_PUBLIC_FIREBASE_* keys.');
-      setLoading(false);
+    if (!db || !user) {
+      setOrders(0);
+      setOrdersLoading(false);
       return;
     }
 
-    const firebaseAuth = auth;
-    const firestore = db;
-    let unsubscribeProfile = () => {};
-
-    const unsubscribeAuth = onAuthStateChanged(firebaseAuth, (user) => {
-      if (!user) {
-        setError('Please log in to update your profile.');
-        setLoading(false);
-        return;
+    setOrdersLoading(true);
+    const q = query(collection(db, 'appointments'), where('customerId', '==', user.uid));
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setOrders(snap.size);
+        setOrdersLoading(false);
+      },
+      () => {
+        setOrders(0);
+        setOrdersLoading(false);
       }
+    );
+    return () => unsub();
+  }, [user]);
 
-      const profileRef = doc(firestore, 'users', user.uid);
-      unsubscribeProfile();
-      unsubscribeProfile = onSnapshot(
-        profileRef,
-        (snapshot) => {
-          if (snapshot.exists()) {
-            const data = snapshot.data() as UserProfile;
-            setForm({
-              firstName: data.firstName || '',
-              lastName: data.lastName || '',
-              email: data.email || user.email || '',
-              phone: data.phone || '',
-              reminders: data.preferences?.reminders ?? true,
-              marketing: data.preferences?.marketing ?? false
-            });
-          } else {
-            setForm((prev) => ({
-              ...prev,
-              email: user.email || ''
-            }));
-          }
-          setLoading(false);
-        },
-        (err) => {
-          setError(err.message);
-          setLoading(false);
-        }
-      );
-    });
+  const displayName = useMemo(() => {
+    const full = `${(profile?.firstName || '').trim()} ${(profile?.lastName || '').trim()}`.trim();
+    if (full) return full;
+    const email = profile?.email || user?.email || '';
+    if (email.includes('@')) return email.split('@')[0];
+    return 'Your profile';
+  }, [profile?.email, profile?.firstName, profile?.lastName, user?.email]);
 
-    return () => {
-      unsubscribeAuth();
-      unsubscribeProfile();
-    };
-  }, []);
+  const avatarLetter = useMemo(() => {
+    const source = (profile?.firstName || profile?.email || user?.email || 'U').trim();
+    return source ? source[0].toUpperCase() : 'U';
+  }, [profile?.email, profile?.firstName, user?.email]);
 
-  const handleSave = async () => {
-    if (!auth || !db) return;
-    const user = auth.currentUser;
-    if (!user) {
-      setError('Please log in to update your profile.');
-      return;
-    }
-    setSaving(true);
-    setError(null);
-    setStatus(null);
-    try {
-      await updateUserProfile(user.uid, {
-        firstName: form.firstName,
-        lastName: form.lastName,
-        phone: form.phone,
-        email: user.email ?? form.email ?? '',
-        preferences: {
-          reminders: form.reminders,
-          marketing: form.marketing
-        },
-        updatedAt: new Date().toISOString()
-      });
-      setStatus('Profile updated.');
-      window.setTimeout(() => setStatus(null), 2500);
-    } catch (err) {
-      setError((err as Error).message || 'Unable to save profile.');
-    } finally {
-      setSaving(false);
-    }
-  };
+  const locationLine = useMemo(() => formatLocation(profile?.location, profile?.pincode), [
+    profile?.location,
+    profile?.pincode
+  ]);
+
+  const points = profile?.stats?.points ?? 250;
+  const wallet = profile?.stats?.wallet ?? 500;
+  const wishlist = profile?.stats?.wishlist ?? 8;
 
   const handleLogout = async () => {
     if (!auth) return;
+    setActionError(null);
     try {
       await signOut(auth);
       document.cookie = 'lumiere_auth=; path=/; max-age=0; samesite=lax';
       window.location.href = '/login';
     } catch (err) {
-      setError((err as Error).message || 'Unable to sign out.');
+      setActionError((err as Error).message || 'Unable to sign out.');
     }
   };
 
   return (
     <div className="min-h-screen pb-32 relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-primary/15 blur-3xl" />
-        <div className="absolute -right-32 top-32 h-96 w-96 rounded-full bg-sky/25 blur-3xl" />
-        <div className="absolute left-1/2 -bottom-48 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-accent/14 blur-3xl" />
+        <div className="absolute -left-24 top-8 h-72 w-72 rounded-full bg-primary/14 blur-3xl" />
+        <div className="absolute -right-28 top-28 h-96 w-96 rounded-full bg-sky/22 blur-3xl" />
+        <div className="absolute left-1/2 -bottom-56 h-[620px] w-[620px] -translate-x-1/2 rounded-full bg-accent/14 blur-3xl" />
       </div>
 
       <CustomerContainer className="pt-7 space-y-6 relative">
-        <header className="space-y-1">
-          <p className="text-xs text-charcoal/60">Profile</p>
-          <h1 className="text-2xl font-semibold text-ink">Your profile</h1>
-          <p className="text-sm text-charcoal/70">
-            Keep your preferences ready for every booking.
-          </p>
+        <header className="flex items-start justify-between">
+          <div className="space-y-1">
+            <p className="text-xs text-charcoal/60">Profile</p>
+            <h1 className="text-3xl font-semibold text-ink leading-tight">Your space</h1>
+            <p className="text-sm text-charcoal/70">Bookings, saved looks, and preferences.</p>
+          </div>
+
+          <button
+            type="button"
+            className="relative h-12 w-12 rounded-2xl bg-white/90 shadow-soft border border-white/70 flex items-center justify-center focus-ring"
+            aria-label="Notifications"
+          >
+            <Bell size={18} className="text-ink" />
+            <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
+          </button>
         </header>
 
-        <div className="rounded-[40px] border border-white/70 bg-gradient-to-b from-white/80 via-white/70 to-white/65 shadow-glow backdrop-blur-xl p-6 space-y-6 animate-fade-up">
-          {loading ? (
-            <div className="space-y-5">
+        {error ? (
+          <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-5 text-sm text-red-600">
+            {error}{' '}
+            <Link href="/login" className="text-primary font-medium">
+              Go to login
+            </Link>
+          </div>
+        ) : null}
+
+        <section className="space-y-3">
+          <div className="rounded-[34px] overflow-hidden border border-white/70 shadow-glow">
+            <div className="bg-gradient-to-r from-rose-600 via-red-600 to-orange-500 p-5">
               <div className="flex items-center justify-between gap-4">
-                <Skeleton className="h-5 w-36" />
-                <Skeleton className="h-5 w-20" />
-              </div>
-              <div className="space-y-4">
-                {Array.from({ length: 4 }).map((_, idx) => (
-                  <div key={idx} className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-14 rounded-full" />
+                <div className="flex items-center gap-4 min-w-0">
+                  <div className="relative h-14 w-14 shrink-0 rounded-2xl bg-white grid place-items-center shadow-soft">
+                    <span className="text-2xl font-semibold text-rose-700">{avatarLetter}</span>
+                    <span className="absolute -right-1 -bottom-1 h-6 w-6 rounded-full bg-white grid place-items-center shadow-soft">
+                      <CheckCircle2 size={16} className="text-emerald-500" />
+                    </span>
                   </div>
-                ))}
-              </div>
-              <div className="rounded-[32px] bg-secondary/60 border border-white/70 p-5 space-y-3">
-                <Skeleton className="h-5 w-28" />
-                <div className="flex items-center justify-between gap-4">
-                  <Skeleton className="h-4 w-44" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
+                  <div className="min-w-0 text-white">
+                    <p className="text-lg font-semibold truncate">
+                      {loading ? 'Loading...' : displayName}
+                    </p>
+                    <p className="mt-1 text-xs text-white/90 inline-flex items-center gap-1.5 truncate">
+                      <MapPin size={12} className="opacity-90" />
+                      {locationLine}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between gap-4">
-                  <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-6 w-6 rounded-md" />
-                </div>
+
+                <Link
+                  href="/profile/edit"
+                  className="h-12 w-12 rounded-2xl bg-white/18 border border-white/30 grid place-items-center text-white shadow-soft focus-ring"
+                  aria-label="Edit profile"
+                >
+                  <Pencil size={18} />
+                </Link>
               </div>
-              <Skeleton className="h-14 rounded-full" />
             </div>
-          ) : error ? (
-            <div className="space-y-4">
-              <p className="text-sm text-red-600" role="alert">
-                {error}
+
+            <div className="bg-white/92 p-4">
+              <div className="rounded-3xl bg-secondary/60 border border-white/70 shadow-soft p-4 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="h-11 w-11 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center">
+                    <MapPin size={18} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] uppercase tracking-[0.22em] text-charcoal/50">
+                      Default Location
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-ink truncate">{locationLine}</p>
+                  </div>
+                </div>
+                <Link
+                  href="/profile/edit"
+                  className="shrink-0 rounded-2xl bg-white/85 border border-white/70 px-4 py-2 text-xs font-semibold text-rose-600 shadow-soft focus-ring"
+                >
+                  Change
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[34px] bg-white/92 shadow-soft border border-white/70 p-4">
+          <div className="grid grid-cols-4 gap-2">
+            <div className="text-center">
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-sky-50 text-sky-700 grid place-items-center">
+                <ReceiptText size={18} />
+              </div>
+              <p className="mt-2 text-lg font-semibold text-ink">
+                {ordersLoading ? <span className="inline-block h-5 w-8 rounded bg-muted/60" /> : orders}
               </p>
-              <Link href="/login" className="text-sm font-medium text-primary">
-                Go to login
+              <p className="text-[11px] text-charcoal/55">Orders</p>
+            </div>
+            <div className="text-center">
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-amber-50 text-amber-700 grid place-items-center">
+                <Gem size={18} />
+              </div>
+              <p className="mt-2 text-lg font-semibold text-ink">{points}</p>
+              <p className="text-[11px] text-charcoal/55">Points</p>
+            </div>
+            <div className="text-center">
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center">
+                <Wallet size={18} />
+              </div>
+              <p className="mt-2 text-lg font-semibold text-ink">{formatCurrency(wallet)}</p>
+              <p className="text-[11px] text-charcoal/55">Wallet</p>
+            </div>
+            <div className="text-center">
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-rose-50 text-rose-700 grid place-items-center">
+                <Heart size={18} />
+              </div>
+              <p className="mt-2 text-lg font-semibold text-ink">{wishlist}</p>
+              <p className="text-[11px] text-charcoal/55">Wishlist</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[34px] overflow-hidden border border-white/70 shadow-glow">
+          <div className="relative bg-gradient-to-r from-[#0B0B16] via-[#13132A] to-[#0B0B16] p-5 text-white">
+            <div className="absolute -left-16 -top-20 h-56 w-56 rounded-full bg-yellow-400/10 blur-3xl" />
+            <div className="absolute -right-16 -bottom-24 h-72 w-72 rounded-full bg-primary/18 blur-3xl" />
+            <div className="relative flex items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <span className="h-11 w-11 rounded-2xl bg-yellow-300/15 text-yellow-200 grid place-items-center">
+                  <Gem size={18} />
+                </span>
+                <div>
+                  <p className="text-base font-semibold">ThisAI Premium</p>
+                  <p className="mt-0.5 text-xs text-white/70">
+                    Exclusive deals + priority booking perks.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/help"
+                className="rounded-2xl bg-yellow-300 text-black px-4 py-2 text-xs font-semibold shadow-soft focus-ring"
+              >
+                Try Free
               </Link>
             </div>
-          ) : (
-            <>
-              <form
-                onSubmit={(event) => {
-                  event.preventDefault();
-                  handleSave();
-                }}
-                className="space-y-4"
-              >
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First name</Label>
-                  <Input
-                    id="firstName"
-                    value={form.firstName}
-                    onChange={(event) =>
-                      setForm((prev) => ({ ...prev, firstName: event.target.value }))
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        event.preventDefault();
-                        lastNameRef.current?.focus();
-                      }
-                    }}
-                    autoComplete="given-name"
-                    enterKeyHint="next"
-                    className="rounded-full bg-white/90 border border-white/80 shadow-soft px-6 min-h-[56px]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last name</Label>
-                  <Input
-                    ref={lastNameRef}
-                    id="lastName"
-                    value={form.lastName}
-                    onChange={(event) =>
-                      setForm((prev) => ({ ...prev, lastName: event.target.value }))
-                    }
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter') {
-                        event.preventDefault();
-                        phoneRef.current?.focus();
-                      }
-                    }}
-                    autoComplete="family-name"
-                    enterKeyHint="next"
-                    className="rounded-full bg-white/90 border border-white/80 shadow-soft px-6 min-h-[56px]"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={form.email}
-                    readOnly
-                    autoComplete="email"
-                    className="rounded-full bg-white/80 border border-white/70 shadow-soft px-6 min-h-[56px] text-charcoal/70"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    ref={phoneRef}
-                    id="phone"
-                    type="tel"
-                    inputMode="tel"
-                    value={form.phone}
-                    onChange={(event) =>
-                      setForm((prev) => ({ ...prev, phone: event.target.value }))
-                    }
-                    autoComplete="tel"
-                    enterKeyHint="done"
-                    placeholder="e.g. 90925 67609"
-                    className="rounded-full bg-white/90 border border-white/80 shadow-soft px-6 min-h-[56px]"
-                  />
-                </div>
+          </div>
+        </section>
 
-                <div className="rounded-[32px] bg-secondary/70 border border-white/70 p-5 space-y-3">
-                  <p className="text-sm font-semibold text-ink">Preferences</p>
-                  <div className="flex items-center justify-between gap-4 text-sm">
-                    <span className="text-charcoal/80">Appointment reminders</span>
-                    <input
-                      type="checkbox"
-                      checked={form.reminders}
-                      onChange={(event) =>
-                        setForm((prev) => ({ ...prev, reminders: event.target.checked }))
-                      }
-                      className="h-6 w-6 rounded-md border border-primary/20 accent-primary"
-                      aria-label="Appointment reminders"
-                    />
-                  </div>
-                  <div className="flex items-center justify-between gap-4 text-sm">
-                    <span className="text-charcoal/80">New offers</span>
-                    <input
-                      type="checkbox"
-                      checked={form.marketing}
-                      onChange={(event) =>
-                        setForm((prev) => ({ ...prev, marketing: event.target.checked }))
-                      }
-                      className="h-6 w-6 rounded-md border border-primary/20 accent-primary"
-                      aria-label="New offers"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  <Button
-                    type="submit"
-                    disabled={saving}
-                    className={cn('w-full rounded-full min-h-[60px] text-base font-semibold')}
-                  >
-                    {saving ? (
-                      <span className="flex items-center gap-2">
-                        <Spinner className="h-4 w-4 border-white/40 border-t-white" />
-                        Saving...
-                      </span>
-                    ) : (
-                      'Save changes'
-                    )}
-                  </Button>
-                  {status ? <span className="text-sm text-primary">{status}</span> : null}
-                </div>
-              </form>
-
-              <div className="pt-1">
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="w-full text-center text-sm text-charcoal/70 hover:text-primary transition-colors"
-                >
-                  Sign out
-                </button>
+        <section className="rounded-[34px] bg-white/92 shadow-soft border border-white/70 p-2">
+          <p className="px-4 pt-4 pb-2 text-[11px] uppercase tracking-[0.22em] text-charcoal/50">
+            Account Settings
+          </p>
+          <div className="space-y-1 pb-2">
+            <Link
+              href="/profile/edit"
+              className="flex items-center justify-between rounded-3xl px-4 py-4 hover:bg-secondary/40 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="h-11 w-11 rounded-2xl bg-rose-50 text-rose-700 grid place-items-center">
+                  <Pencil size={18} />
+                </span>
+                <span className="text-sm font-medium text-ink">Edit Profile</span>
               </div>
-            </>
-          )}
+              <ChevronRight size={18} className="text-charcoal/40" />
+            </Link>
+
+            <Link
+              href="/profile/addresses"
+              className="flex items-center justify-between rounded-3xl px-4 py-4 hover:bg-secondary/40 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="h-11 w-11 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center">
+                  <MapPin size={18} />
+                </span>
+                <span className="text-sm font-medium text-ink">My Address</span>
+              </div>
+              <ChevronRight size={18} className="text-charcoal/40" />
+            </Link>
+
+            <Link
+              href="/profile/wallet"
+              className="flex items-center justify-between rounded-3xl px-4 py-4 hover:bg-secondary/40 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="h-11 w-11 rounded-2xl bg-emerald-50 text-emerald-700 grid place-items-center">
+                  <Wallet size={18} />
+                </span>
+                <span className="text-sm font-medium text-ink">Wallet</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-emerald-700">{formatCurrency(wallet)}</span>
+                <ChevronRight size={18} className="text-charcoal/40" />
+              </div>
+            </Link>
+
+            <Link
+              href="/help"
+              className="flex items-center justify-between rounded-3xl px-4 py-4 hover:bg-secondary/40 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="h-11 w-11 rounded-2xl bg-sky-50 text-sky-700 grid place-items-center">
+                  <ReceiptText size={18} />
+                </span>
+                <span className="text-sm font-medium text-ink">Help & Support</span>
+              </div>
+              <ChevronRight size={18} className="text-charcoal/40" />
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center justify-between rounded-3xl px-4 py-4 hover:bg-secondary/40 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <span className="h-11 w-11 rounded-2xl bg-charcoal/5 text-charcoal grid place-items-center">
+                  <LogOut size={18} />
+                </span>
+                <span className="text-sm font-medium text-ink">Sign out</span>
+              </div>
+              <ChevronRight size={18} className="text-charcoal/40" />
+            </button>
+          </div>
+        </section>
+
+        {actionError ? (
+          <div className="rounded-3xl bg-red-50 border border-red-100 p-4 text-sm text-red-700">
+            {actionError}
+          </div>
+        ) : null}
+
+        {/* Optional floating language button (visual accent like the reference) */}
+        <div className="md:hidden fixed right-5 bottom-[108px] z-40">
+          <button
+            type="button"
+            className={cn(
+              'h-12 w-12 rounded-full bg-gradient-to-br from-rose-500 to-red-500 text-white shadow-glow',
+              'grid place-items-center text-xs font-semibold'
+            )}
+            aria-label="Language"
+          >
+            EN
+          </button>
         </div>
       </CustomerContainer>
     </div>
