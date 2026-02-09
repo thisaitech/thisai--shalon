@@ -1,13 +1,15 @@
 'use client';
 
-import { formatCurrency } from '@/lib/utils';
-import { cn } from '@/lib/utils';
+import Image from 'next/image';
+import { CheckCircle2 } from 'lucide-react';
+import { cn, formatCurrency } from '@/lib/utils';
 
 export default function ServiceItem({
   name,
   description,
   price,
   duration,
+  image,
   selected,
   onSelect
 }: {
@@ -15,6 +17,7 @@ export default function ServiceItem({
   description: string;
   price: number;
   duration: number;
+  image?: string;
   selected?: boolean;
   onSelect?: () => void;
 }) {
@@ -23,33 +26,47 @@ export default function ServiceItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        'group relative w-full text-left rounded-[26px] border border-white/70 bg-white/92 p-4 sm:p-5 transition-all hover:-translate-y-0.5 hover:shadow-glow focus-ring min-h-[160px] flex flex-col justify-between overflow-hidden',
-        selected &&
-          'border-transparent bg-gradient-to-br from-primary/10 via-lilac/10 to-accent/10 shadow-glow'
+        'group relative w-full text-left rounded-[28px] border border-white/70 bg-white/92 p-5 transition-transform hover:-translate-y-0.5 hover:shadow-glow focus-ring min-h-[168px] flex flex-col justify-between overflow-hidden',
+        selected ? 'border-primary/40 shadow-glow' : 'shadow-soft',
+        'active:translate-y-0 active:scale-[0.99]'
       )}
     >
-      <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        <div className="absolute -right-10 -top-10 h-28 w-28 rounded-full bg-primary/10 blur-2xl" />
-        <div className="absolute -left-10 bottom-0 h-24 w-24 rounded-full bg-accent/10 blur-2xl" />
-      </div>
-      <div className="relative z-10 flex items-center justify-between gap-3 text-[11px] text-charcoal/60">
-        <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-1 text-[10px] text-primary">
-          Trending
-        </span>
-        <span className="inline-flex items-center rounded-full bg-white/95 px-2.5 py-1 text-[11px] text-primary shadow-soft">
+      {image ? (
+        <div className="absolute inset-0">
+          <Image
+            src={image}
+            alt=""
+            fill
+            className="object-cover opacity-20 scale-110 blur-[1px]"
+            sizes="(max-width: 768px) 50vw, 220px"
+            aria-hidden="true"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/92 to-white/85" />
+        </div>
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/6 via-lilac/6 to-sky/10 opacity-70" />
+      )}
+
+      <div className="relative z-10 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-ink leading-snug truncate">{name}</p>
+          <p className="mt-1 text-[11px] text-charcoal/65 line-clamp-2">{description}</p>
+        </div>
+        <span className="shrink-0 text-[11px] text-primary/90 bg-white/90 border border-white/70 shadow-soft rounded-full px-2.5 py-1">
           {duration} min
         </span>
       </div>
-      <div className="relative z-10 mt-4 space-y-2 min-h-[60px]">
-        <p className="text-sm sm:text-base font-semibold text-primary leading-snug">{name}</p>
-        <p className="text-xs text-charcoal/70 max-h-10 overflow-hidden">{description}</p>
+
+      <div className="relative z-10 flex items-end justify-between gap-4 pt-4">
+        <span className="text-base font-semibold text-primary tracking-tight">
+          {formatCurrency(price)}
+        </span>
+        <span className="text-[11px] text-charcoal/65">Instant confirmation</span>
       </div>
-      <div className="relative z-10 mt-5 flex items-center justify-between">
-        <span className="text-base font-semibold text-primary">{formatCurrency(price)}</span>
-        <span className="text-[11px] text-charcoal/60">Instant confirmation</span>
-      </div>
+
       {selected ? (
-        <span className="absolute right-3 top-3 rounded-full bg-white/95 px-2 py-1 text-[10px] font-medium text-primary shadow-soft">
+        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-primary text-white px-2.5 py-1 text-[10px] font-medium shadow-glow">
+          <CheckCircle2 size={12} />
           Selected
         </span>
       ) : null}

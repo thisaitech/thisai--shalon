@@ -11,6 +11,7 @@ import {
   Section,
   Text
 } from '@react-email/components';
+import { formatCurrency } from '@/lib/utils';
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -51,7 +52,7 @@ export function BookingConfirmationEmail({
             <Text><strong>Service:</strong> {appointment.serviceName}</Text>
             <Text><strong>Date:</strong> {appointment.date}</Text>
             <Text><strong>Time:</strong> {appointment.time}</Text>
-            <Text><strong>Price:</strong> ${appointment.price}</Text>
+            <Text><strong>Price:</strong> {formatCurrency(appointment.price)}</Text>
           </Section>
           <Hr style={{ margin: '24px 0' }} />
           <Text style={{ color: '#3A3A3A' }}>

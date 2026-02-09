@@ -26,6 +26,7 @@ export default function MobileNav() {
     pathname.startsWith('/owner') ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
+    pathname.startsWith('/payment') ||
     pathname.startsWith('/welcome')
   ) {
     return null;

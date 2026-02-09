@@ -2,6 +2,7 @@
 
 import { cn, formatTime, generateTimeSlots } from '@/lib/utils';
 import type { BusinessHours } from '@/lib/utils';
+import Skeleton from '@/components/ui/skeleton';
 
 export default function AvailabilityGrid({
   date,
@@ -9,6 +10,7 @@ export default function AvailabilityGrid({
   serviceDuration,
   selectedTime,
   bookedTimes,
+  loading = false,
   onSelect
 }: {
   date: Date | null;
@@ -16,12 +18,23 @@ export default function AvailabilityGrid({
   serviceDuration: number;
   selectedTime: string | null;
   bookedTimes: string[];
+  loading?: boolean;
   onSelect: (time: string) => void;
 }) {
   if (!date) {
     return (
       <div className="rounded-2xl border border-dashed border-primary/20 bg-white/60 p-6 text-center text-sm text-charcoal/60">
         Pick a date to reveal available times.
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Skeleton key={index} className="h-12" />
+        ))}
       </div>
     );
   }

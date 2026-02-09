@@ -13,11 +13,21 @@ import {
 import Carousel from '@/components/ui/carousel';
 import CustomerContainer from '@/components/layout/CustomerContainer';
 import SalonDetailTabs from '@/components/salon/SalonDetailTabs';
+import { formatCurrency } from '@/lib/utils';
 import { salons } from '@/lib/data';
 
 export default function SalonDetailPage({ params }: { params: { id: string } }) {
   const salon = salons.find((item) => item.id === params.id);
   if (!salon) return notFound();
+
+  const priceRange = (() => {
+    const prices = salon.services.map((service) => service.price);
+    if (prices.length === 0) return null;
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    if (min === max) return formatCurrency(min);
+    return `${formatCurrency(min)} - ${formatCurrency(max)}`;
+  })();
 
   const gallery = [
     salon.image,
@@ -86,10 +96,12 @@ export default function SalonDetailPage({ params }: { params: { id: string } }) 
               <Clock size={14} className="text-primary" />
               10am - 10pm
             </span>
-            <span className="inline-flex items-center gap-1.5">
-              <BadgeDollarSign size={14} className="text-primary" />
-              $40 - $260
-            </span>
+            {priceRange ? (
+              <span className="inline-flex items-center gap-1.5">
+                <BadgeDollarSign size={14} className="text-primary" />
+                {priceRange}
+              </span>
+            ) : null}
           </div>
         </div>
 

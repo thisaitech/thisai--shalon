@@ -1,11 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
-import {
-  defaultBusinessHours,
-  isOverlapping,
-  isWithinBusinessHours
-} from '@/lib/utils';
-import { sendBookingConfirmation, sendNewBookingAlert } from '@/lib/resend';
+import { createAppointment, type PaymentInfo } from '@/lib/server/appointments';
 
 export async function GET(req: NextRequest) {
   try {
@@ -65,7 +60,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const adminDb = getAdminDb();
     const body = await req.json();
     const {
       salonId,
@@ -76,96 +70,43 @@ export async function POST(req: NextRequest) {
       date,
       time,
       customerEmail,
-      customerId
+      customerId,
+      paymentMethod,
+      paymentReferenceId
     } = body;
 
-    const duration = Number(serviceDuration);
-    const priceValue = price ? Number(price) : 0;
-
-    if (!salonId || !serviceId || !date || !time || !duration) {
-      return NextResponse.json({ error: 'Missing booking details' }, { status: 400 });
+    let payment: PaymentInfo | undefined = undefined;
+    if (paymentMethod === 'cash') {
+      payment = { method: 'cash', status: 'unpaid', provider: 'manual' };
+    } else if (paymentMethod === 'upi') {
+      payment = {
+        method: 'upi',
+        status: 'pending',
+        provider: 'manual',
+        referenceId: typeof paymentReferenceId === 'string' ? paymentReferenceId : undefined
+      };
     }
 
-    const salonDoc = await adminDb.collection('salons').doc(salonId).get();
-    const salonData = salonDoc.exists ? salonDoc.data() : null;
-    const businessHours = salonData?.businessHours ?? defaultBusinessHours;
-
-    const selectedDate = new Date(`${date}T00:00:00`);
-    if (!isWithinBusinessHours(selectedDate, time, businessHours, duration)) {
-      return NextResponse.json(
-        { error: 'Outside business hours' },
-        { status: 400 }
-      );
-    }
-
-    const existing = await adminDb
-      .collection('appointments')
-      .where('salonId', '==', salonId)
-      .where('date', '==', date)
-      .where('status', 'in', ['pending', 'confirmed'])
-      .get();
-
-    const hasOverlap = existing.docs.some((doc) => {
-      const data = doc.data();
-      return isOverlapping(time, duration, data.time, data.duration);
-    });
-
-    if (hasOverlap) {
-      return NextResponse.json(
-        { error: 'Selected time is no longer available' },
-        { status: 409 }
-      );
-    }
-
-    const appointmentRef = await adminDb.collection('appointments').add({
+    const result = await createAppointment({
       salonId,
       serviceId,
       serviceName,
-      duration,
-      price: priceValue,
+      serviceDuration,
+      price,
       date,
       time,
+      customerEmail,
+      customerId,
       status: 'pending',
-      customerEmail: customerEmail ?? null,
-      customerId: customerId ?? null,
-      createdAt: new Date().toISOString()
+      payment
     });
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-    if (customerEmail) {
-      await sendBookingConfirmation({
-        to: customerEmail,
-        appointment: {
-          serviceName,
-          date,
-          time,
-          price: priceValue,
-          salonName: salonData?.name ?? 'Lumiére Salon',
-          salonAddress: salonData?.location
-        }
-      });
-    }
-
-    if (salonData?.ownerEmail) {
-      await sendNewBookingAlert({
-        to: salonData.ownerEmail,
-        appointment: {
-          serviceName,
-          date,
-          time,
-          price: priceValue,
-          salonName: salonData?.name ?? 'Lumiére Salon'
-        },
-        acceptUrl: `${appUrl}/dashboard/admin?appointment=${appointmentRef.id}&action=accept`,
-        rejectUrl: `${appUrl}/dashboard/admin?appointment=${appointmentRef.id}&action=reject`
-      });
-    }
-
-    return NextResponse.json({ id: appointmentRef.id });
+    return NextResponse.json({ id: result.id });
   } catch (error) {
+    const status = (error as Error & { status?: number }).status ?? 500;
     return NextResponse.json(
       { error: (error as Error).message || 'Server error' },
-      { status: 500 }
+      { status }
     );
   }
 }

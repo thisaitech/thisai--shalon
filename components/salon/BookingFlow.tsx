@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Calendar from '@/components/ui/calendar';
 import AvailabilityGrid from '@/components/salon/AvailabilityGrid';
 import ServiceItem from '@/components/salon/ServiceItem';
@@ -11,8 +12,9 @@ import { formatCurrency, formatDate, formatTime, toDateKey } from '@/lib/utils';
 import { auth } from '@/lib/firebase/client';
 import { onAuthStateChanged } from 'firebase/auth';
 import type { Salon, Service } from '@/lib/data';
+import { serviceImages } from '@/lib/service-images';
 
-const steps = ['Service', 'Time', 'Confirm'];
+const steps = ['Service', 'Time', 'Payment'];
 
 export default function BookingFlow({
   salon,
@@ -21,10 +23,12 @@ export default function BookingFlow({
   salon: Salon;
   initialServiceId?: string;
 }) {
+  const router = useRouter();
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [bookedTimes, setBookedTimes] = useState<string[]>([]);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +61,7 @@ export default function BookingFlow({
     if (!selectedDate) return;
     const controller = new AbortController();
     const fetchBooked = async () => {
+      setAvailabilityLoading(true);
       try {
         const dateKey = toDateKey(selectedDate);
         const response = await fetch(
@@ -78,6 +83,8 @@ export default function BookingFlow({
         if ((err as Error).name !== 'AbortError') {
           setBookedTimes([]);
         }
+      } finally {
+        setAvailabilityLoading(false);
       }
     };
     fetchBooked();
@@ -94,40 +101,20 @@ export default function BookingFlow({
     };
   }, [selectedDate, selectedService, selectedTime]);
 
-  const handleConfirm = async () => {
+  const continueToPayment = async () => {
     if (!selectedService || !selectedDate || !selectedTime) return;
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/appointments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          salonId: salon.id,
-          serviceId: selectedService.id,
-          serviceName: selectedService.name,
-          serviceDuration: selectedService.duration,
-          price: selectedService.price,
-          date: toDateKey(selectedDate),
-          time: selectedTime,
-          customerEmail: userEmail,
-          customerId: userId
-        })
+      const qs = new URLSearchParams({
+        salon: salon.id,
+        service: selectedService.id,
+        date: toDateKey(selectedDate),
+        time: selectedTime
       });
-      if (!response.ok) {
-        const text = await response.text();
-        let message = 'Unable to book appointment';
-        try {
-          const data = JSON.parse(text);
-          message = data.error || message;
-        } catch {
-          if (text) message = text;
-        }
-        throw new Error(message);
-      }
-      window.location.href = '/booking-confirmation';
+      router.push(`/payment?${qs.toString()}`);
     } catch (err) {
-      setError((err as Error).message);
+      setError((err as Error).message || 'Unable to continue.');
     } finally {
       setLoading(false);
     }
@@ -135,12 +122,14 @@ export default function BookingFlow({
 
   return (
     <div className="space-y-6">
-      <StepProgress steps={steps} current={step} />
+      <div className="space-y-4">
+        <StepProgress steps={steps} current={step} />
       <div className="space-y-4">
         <h2 className="text-2xl font-display text-primary">Reserve your glow session</h2>
         <p className="text-sm text-charcoal/80">
           Bridal, groom, and unisex beauty rituals tailored to your schedule.
         </p>
+      </div>
       </div>
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -155,6 +144,7 @@ export default function BookingFlow({
               description={service.description}
               price={service.price}
               duration={service.duration}
+              image={serviceImages[service.id] ?? salon.image}
               selected={selectedService?.id === service.id}
               onSelect={() => {
                 setSelectedService(service);
@@ -181,6 +171,7 @@ export default function BookingFlow({
             serviceDuration={selectedService?.duration ?? 30}
             selectedTime={selectedTime}
             bookedTimes={bookedTimes}
+            loading={availabilityLoading}
             onSelect={(time) => {
               setSelectedTime(time);
               setStep(3);
@@ -188,38 +179,87 @@ export default function BookingFlow({
           />
         </div>
       </div>
-      <div className="rounded-2xl border border-white/70 bg-white/85 p-5 space-y-4 shadow-soft">
-        <h3 className="font-display text-lg text-primary">Confirm</h3>
-        {summary ? (
-          <div className="space-y-2 text-sm text-charcoal/70">
-            <p><strong>Service:</strong> {summary.service}</p>
-            <p><strong>Date:</strong> {summary.date}</p>
-            <p><strong>Time:</strong> {summary.time}</p>
-            <p><strong>Total:</strong> {formatCurrency(summary.price)}</p>
+
+      {error ? (
+        <p className="text-sm text-red-600" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      {summary ? (
+        <div className="hidden md:block rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-xs text-charcoal/60">Ready to pay</p>
+              <p className="mt-1 text-lg font-semibold text-ink">{summary.service}</p>
+              <p className="mt-1 text-sm text-charcoal/60">
+                {summary.date} · {summary.time}
+              </p>
+            </div>
+            <p className="text-lg font-semibold text-primary">{formatCurrency(summary.price)}</p>
           </div>
-        ) : (
-          <p className="text-sm text-charcoal/60">Select a service and time to continue.</p>
-        )}
-        {error ? (
-          <p className="text-sm text-red-600" role="alert">
-            {error}
-          </p>
-        ) : null}
-        <Button
-          onClick={handleConfirm}
-          disabled={!summary || loading}
-          className="w-full justify-center"
-        >
-          {loading ? (
-            <span className="flex items-center gap-2">
-              <Spinner className="h-4 w-4 border-white/40 border-t-white" />
-              Confirming...
-            </span>
-          ) : (
-            'Confirm booking'
-          )}
-        </Button>
-      </div>
+          <Button
+            onClick={continueToPayment}
+            disabled={loading}
+            className="mt-5 w-full justify-center"
+          >
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <Spinner className="h-4 w-4 border-white/40 border-t-white" />
+                Loading...
+              </span>
+            ) : (
+              'Continue to payment'
+            )}
+          </Button>
+        </div>
+      ) : (
+        <div className="hidden md:block rounded-3xl bg-white/70 border border-white/70 p-6 text-sm text-charcoal/60">
+          Select a service and time to continue to payment.
+        </div>
+      )}
+
+      {summary ? (
+        <div className="fixed bottom-24 left-0 right-0 z-30 md:hidden">
+          <div className="mx-auto w-full max-w-[440px] px-5">
+            <div className="rounded-3xl bg-white/92 shadow-glow border border-white/70 p-4 backdrop-blur-xl">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs text-charcoal/60">Your booking</p>
+                  <p className="mt-0.5 text-sm font-semibold text-ink truncate">
+                    {summary.service}
+                  </p>
+                  <p className="mt-1 text-[11px] text-charcoal/60">
+                    {summary.date} · {summary.time}
+                  </p>
+                </div>
+                <p className="text-sm font-semibold text-primary">
+                  {formatCurrency(summary.price)}
+                </p>
+              </div>
+              <Button
+                onClick={continueToPayment}
+                disabled={loading}
+                className="mt-3 w-full justify-center"
+              >
+                {loading ? (
+                  <span className="flex items-center gap-2">
+                    <Spinner className="h-4 w-4 border-white/40 border-t-white" />
+                    Loading...
+                  </span>
+                ) : (
+                  'Continue to payment'
+                )}
+              </Button>
+              {!userEmail ? (
+                <p className="mt-2 text-[11px] text-charcoal/55">
+                  Tip: log in to keep bookings synced in your profile.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
