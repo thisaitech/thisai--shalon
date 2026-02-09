@@ -49,8 +49,12 @@ export default function ServiceItem({
 
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-ink leading-snug truncate">{name}</p>
-          <p className="mt-1 text-[11px] text-charcoal/65 line-clamp-2">{description}</p>
+          <p className="text-[15px] font-semibold text-ink leading-snug line-clamp-2 min-h-[40px]">
+            {name}
+          </p>
+          <p className="mt-1 text-xs text-charcoal/70 leading-snug line-clamp-2">
+            {description}
+          </p>
         </div>
         <span className="shrink-0 text-[11px] text-primary/90 bg-white/90 border border-white/70 shadow-soft rounded-full px-2.5 py-1">
           {duration} min

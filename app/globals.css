@@ -87,6 +87,14 @@
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /* Lightweight line clamp without extra Tailwind plugins */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 /* React Datepicker overrides */
