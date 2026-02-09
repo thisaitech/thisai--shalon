@@ -20,7 +20,7 @@
     "@headlessui/react": "^1.7.19",
     "@react-email/components": "^0.0.22",
     "firebase": "^10.14.1",
-    "firebase-admin": "^12.0.0",
+    "firebase-admin": "^12.7.0",
     "lucide-react": "^0.331.0",
     "next": "^14.1.0",
     "razorpay": "^2.9.6",
