@@ -6,6 +6,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
 import { ensureUserProfile } from '@/lib/firebase/user';
+import { getAuthErrorMessage } from '@/lib/firebase/auth-errors';
 import { defaultBusinessHours } from '@/lib/utils';
 import Input from '@/components/ui/input';
 import Label from '@/components/ui/label';
@@ -47,7 +48,7 @@ export default function SalonSignupPage() {
       document.cookie = 'lumiere_auth=1; path=/';
       router.push('/dashboard/admin/settings');
     } catch (err) {
-      setError((err as Error).message || 'Unable to create salon.');
+      setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }

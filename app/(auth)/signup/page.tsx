@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase/client';
 import { ensureUserProfile } from '@/lib/firebase/user';
+import { getAuthErrorMessage } from '@/lib/firebase/auth-errors';
 import Input from '@/components/ui/input';
 import Label from '@/components/ui/label';
 import Button from '@/components/ui/button';
@@ -33,7 +34,7 @@ export default function SignupPage() {
       document.cookie = 'lumiere_auth=1; path=/';
       router.push('/appointments');
     } catch (err) {
-      setError((err as Error).message || 'Unable to create account.');
+      setError(getAuthErrorMessage(err));
     } finally {
       setLoading(false);
     }
