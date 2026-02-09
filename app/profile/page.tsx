@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
@@ -11,6 +12,7 @@ import Input from '@/components/ui/input';
 import Label from '@/components/ui/label';
 import Spinner from '@/components/ui/spinner';
 import Skeleton from '@/components/ui/skeleton';
+import { cn } from '@/lib/utils';
 
 type ProfileForm = {
   firstName: string;
@@ -97,6 +99,7 @@ export default function ProfilePage() {
       return;
     }
     setSaving(true);
+    setError(null);
     setStatus(null);
     try {
       await updateUserProfile(user.uid, {
@@ -118,8 +121,14 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen pb-32">
-      <CustomerContainer className="pt-7 space-y-6">
+    <div className="min-h-screen pb-32 relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
+        <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute -right-32 top-32 h-96 w-96 rounded-full bg-sky/25 blur-3xl" />
+        <div className="absolute left-1/2 -bottom-48 h-[520px] w-[520px] -translate-x-1/2 rounded-full bg-accent/14 blur-3xl" />
+      </div>
+
+      <CustomerContainer className="pt-7 space-y-6 relative">
         <header className="space-y-1">
           <p className="text-xs text-charcoal/60">Profile</p>
           <h1 className="text-2xl font-semibold text-ink">Your profile</h1>
@@ -128,39 +137,46 @@ export default function ProfilePage() {
           </p>
         </header>
 
-        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-6 animate-fade-up">
+        <div className="rounded-[40px] border border-white/70 bg-gradient-to-b from-white/80 via-white/70 to-white/65 shadow-glow backdrop-blur-xl p-6 space-y-6 animate-fade-up">
           {loading ? (
             <div className="space-y-5">
               <div className="flex items-center justify-between gap-4">
                 <Skeleton className="h-5 w-36" />
                 <Skeleton className="h-5 w-20" />
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Skeleton className="h-12" />
-                <Skeleton className="h-12" />
-                <Skeleton className="h-12" />
-                <Skeleton className="h-12" />
+              <div className="space-y-4">
+                {Array.from({ length: 4 }).map((_, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-14 rounded-full" />
+                  </div>
+                ))}
               </div>
-              <div className="rounded-2xl bg-secondary/60 border border-white/70 p-4 space-y-3">
+              <div className="rounded-[32px] bg-secondary/60 border border-white/70 p-5 space-y-3">
                 <Skeleton className="h-5 w-28" />
                 <div className="flex items-center justify-between gap-4">
                   <Skeleton className="h-4 w-44" />
-                  <Skeleton className="h-4 w-10" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
                 </div>
                 <div className="flex items-center justify-between gap-4">
                   <Skeleton className="h-4 w-28" />
-                  <Skeleton className="h-4 w-10" />
+                  <Skeleton className="h-6 w-6 rounded-md" />
                 </div>
               </div>
-              <Skeleton className="h-12" />
+              <Skeleton className="h-14 rounded-full" />
             </div>
           ) : error ? (
-            <p className="text-sm text-red-600" role="alert">
-              {error}
-            </p>
+            <div className="space-y-4">
+              <p className="text-sm text-red-600" role="alert">
+                {error}
+              </p>
+              <Link href="/login" className="text-sm font-medium text-primary">
+                Go to login
+              </Link>
+            </div>
           ) : (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First name</Label>
                   <Input
@@ -169,6 +185,9 @@ export default function ProfilePage() {
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, firstName: event.target.value }))
                     }
+                    autoComplete="given-name"
+                    enterKeyHint="next"
+                    className="rounded-full bg-white/90 border border-white/80 shadow-soft px-6 min-h-[56px]"
                   />
                 </div>
                 <div className="space-y-2">
@@ -179,53 +198,74 @@ export default function ProfilePage() {
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, lastName: event.target.value }))
                     }
+                    autoComplete="family-name"
+                    enterKeyHint="next"
+                    className="rounded-full bg-white/90 border border-white/80 shadow-soft px-6 min-h-[56px]"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" value={form.email} readOnly />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={form.email}
+                    readOnly
+                    autoComplete="email"
+                    className="rounded-full bg-white/80 border border-white/70 shadow-soft px-6 min-h-[56px] text-charcoal/70"
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
                     type="tel"
+                    inputMode="tel"
                     value={form.phone}
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, phone: event.target.value }))
                     }
+                    autoComplete="tel"
+                    enterKeyHint="done"
+                    placeholder="e.g. 90925 67609"
+                    className="rounded-full bg-white/90 border border-white/80 shadow-soft px-6 min-h-[56px]"
                   />
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-secondary/70 border border-white/70 p-4 space-y-3">
+              <div className="rounded-[32px] bg-secondary/70 border border-white/70 p-5 space-y-3">
                 <p className="text-sm font-semibold text-ink">Preferences</p>
-                <div className="flex items-center justify-between text-sm">
-                  <span>Appointment reminders</span>
+                <div className="flex items-center justify-between gap-4 text-sm">
+                  <span className="text-charcoal/80">Appointment reminders</span>
                   <input
                     type="checkbox"
                     checked={form.reminders}
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, reminders: event.target.checked }))
                     }
-                    className="h-4 w-4 accent-primary"
+                    className="h-6 w-6 rounded-md border border-primary/20 accent-primary"
+                    aria-label="Appointment reminders"
                   />
                 </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span>New offers</span>
+                <div className="flex items-center justify-between gap-4 text-sm">
+                  <span className="text-charcoal/80">New offers</span>
                   <input
                     type="checkbox"
                     checked={form.marketing}
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, marketing: event.target.checked }))
                     }
-                    className="h-4 w-4 accent-primary"
+                    className="h-6 w-6 rounded-md border border-primary/20 accent-primary"
+                    aria-label="New offers"
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-3">
-                <Button onClick={handleSave} disabled={saving} className="w-full">
+                <Button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className={cn('w-full rounded-full min-h-[60px] text-base font-semibold')}
+                >
                   {saving ? (
                     <span className="flex items-center gap-2">
                       <Spinner className="h-4 w-4 border-white/40 border-t-white" />
@@ -239,24 +279,6 @@ export default function ProfilePage() {
               </div>
             </>
           )}
-        </div>
-
-        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-3 animate-fade-up [animation-delay:80ms]">
-          <p className="text-xs text-charcoal/60">Membership</p>
-          <h2 className="text-xl font-semibold text-ink">Glow Circle</h2>
-          <p className="text-sm text-charcoal/70">
-            Priority booking, bridal trials, and spa upgrades every month.
-          </p>
-          <Button className="w-full">Upgrade membership</Button>
-        </div>
-
-        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-3 animate-fade-up [animation-delay:120ms]">
-          <p className="text-sm font-semibold text-ink">Upcoming benefits</p>
-          <ul className="text-sm text-charcoal/70 space-y-2">
-            <li>• Complimentary bridal touch-ups</li>
-            <li>• Groom grooming add-ons</li>
-            <li>• 15% off hair spa rituals</li>
-          </ul>
         </div>
       </CustomerContainer>
     </div>
