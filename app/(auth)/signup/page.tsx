@@ -31,7 +31,7 @@ export default function SignupPage() {
     try {
       const credential = await createUserWithEmailAndPassword(auth, email, password);
       await ensureUserProfile(credential.user, 'customer');
-      document.cookie = 'lumiere_auth=1; path=/';
+      document.cookie = 'lumiere_auth=1; path=/; max-age=31536000; samesite=lax';
       router.push('/appointments');
     } catch (err) {
       setError(getAuthErrorMessage(err));

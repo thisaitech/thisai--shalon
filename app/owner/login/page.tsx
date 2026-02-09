@@ -31,7 +31,7 @@ export default function OwnerLoginPage() {
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password);
       await ensureUserProfile(credential.user, 'owner');
-      document.cookie = 'lumiere_auth=1; path=/';
+      document.cookie = 'lumiere_auth=1; path=/; max-age=31536000; samesite=lax';
       router.push('/owner');
     } catch (err) {
       setError(getAuthErrorMessage(err));

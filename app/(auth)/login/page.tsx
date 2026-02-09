@@ -34,7 +34,7 @@ export default function LoginPage() {
     try {
       const credential = await signInWithEmailAndPassword(auth, email, password);
       await ensureUserProfile(credential.user, 'customer');
-      document.cookie = 'lumiere_auth=1; path=/';
+      document.cookie = 'lumiere_auth=1; path=/; max-age=31536000; samesite=lax';
       router.push(redirectTo);
     } catch (err) {
       setError(getAuthErrorMessage(err));

@@ -45,7 +45,7 @@ export default function SalonSignupPage() {
         services: [],
         createdAt: new Date().toISOString()
       });
-      document.cookie = 'lumiere_auth=1; path=/';
+      document.cookie = 'lumiere_auth=1; path=/; max-age=31536000; samesite=lax';
       router.push('/dashboard/admin/settings');
     } catch (err) {
       setError(getAuthErrorMessage(err));
