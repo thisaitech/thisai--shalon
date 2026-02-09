@@ -56,7 +56,7 @@ export default function SalonSignupPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-6 py-12">
-      <div className="glass rounded-2xl p-10 w-full max-w-lg">
+      <div className="glass rounded-2xl p-10 w-full max-w-lg animate-fade-up">
         <h1 className="text-3xl font-display text-primary">Join as a salon partner</h1>
         <p className="mt-2 text-sm text-charcoal/70">
           Let clients discover your space and book instantly.

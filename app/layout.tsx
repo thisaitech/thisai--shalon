@@ -5,6 +5,9 @@ import { Manrope, Space_Grotesk } from 'next/font/google';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import MobileNav from '@/components/layout/MobileNav';
+import NavProgress from '@/components/layout/NavProgress';
+import RouteTransition from '@/components/layout/RouteTransition';
+import BootSplash from '@/components/layout/BootSplash';
 
 const inter = Manrope({
   subsets: ['latin'],
@@ -32,10 +35,14 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body>
         <div className="min-h-screen flex flex-col app-shell">
+          <NavProgress />
+          <BootSplash />
           <div className="hidden md:block">
             <Navbar />
           </div>
-          <main className="flex-1 pb-28 md:pb-0">{children}</main>
+          <main className="flex-1 pb-28 md:pb-0">
+            <RouteTransition>{children}</RouteTransition>
+          </main>
           <div className="hidden md:block">
             <Footer />
           </div>

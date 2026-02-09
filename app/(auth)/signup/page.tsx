@@ -42,7 +42,7 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-6 py-12">
-      <div className="glass rounded-2xl p-10 w-full max-w-md">
+      <div className="glass rounded-2xl p-10 w-full max-w-md animate-fade-up">
         <h1 className="text-3xl font-display text-primary">Create your account</h1>
         <p className="mt-2 text-sm text-charcoal/70">
           Book appointments and track your rituals in one place.

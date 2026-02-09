@@ -42,7 +42,7 @@ export default function OwnerLoginPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-6 py-12">
-      <div className="glass rounded-2xl p-10 w-full max-w-md">
+      <div className="glass rounded-2xl p-10 w-full max-w-md animate-fade-up">
         <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Owner access</p>
         <h1 className="text-3xl font-display text-primary mt-3">Business login</h1>
         <p className="mt-2 text-sm text-charcoal/70">

@@ -73,7 +73,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="glass rounded-2xl p-10 w-full max-w-md mx-auto">
+        <div className="glass rounded-2xl p-10 w-full max-w-md mx-auto animate-fade-up [animation-delay:120ms]">
           <h2 className="text-2xl font-display text-primary">Log in with email</h2>
           <p className="mt-2 text-sm text-charcoal/70">We’ll keep your appointments in sync.</p>
           {!auth || !db ? (

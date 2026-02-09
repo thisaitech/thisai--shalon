@@ -10,6 +10,7 @@ import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Label from '@/components/ui/label';
 import Spinner from '@/components/ui/spinner';
+import Skeleton from '@/components/ui/skeleton';
 
 type ProfileForm = {
   firstName: string;
@@ -127,11 +128,31 @@ export default function ProfilePage() {
           </p>
         </header>
 
-        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-6">
+        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-6 animate-fade-up">
           {loading ? (
-            <div className="flex items-center gap-3 text-sm text-charcoal/70">
-              <Spinner className="h-4 w-4 border-primary/30 border-t-primary" />
-              Loading profile...
+            <div className="space-y-5">
+              <div className="flex items-center justify-between gap-4">
+                <Skeleton className="h-5 w-36" />
+                <Skeleton className="h-5 w-20" />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Skeleton className="h-12" />
+                <Skeleton className="h-12" />
+                <Skeleton className="h-12" />
+                <Skeleton className="h-12" />
+              </div>
+              <div className="rounded-2xl bg-secondary/60 border border-white/70 p-4 space-y-3">
+                <Skeleton className="h-5 w-28" />
+                <div className="flex items-center justify-between gap-4">
+                  <Skeleton className="h-4 w-44" />
+                  <Skeleton className="h-4 w-10" />
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <Skeleton className="h-4 w-28" />
+                  <Skeleton className="h-4 w-10" />
+                </div>
+              </div>
+              <Skeleton className="h-12" />
             </div>
           ) : error ? (
             <p className="text-sm text-red-600" role="alert">
@@ -220,7 +241,7 @@ export default function ProfilePage() {
           )}
         </div>
 
-        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-3">
+        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-3 animate-fade-up [animation-delay:80ms]">
           <p className="text-xs text-charcoal/60">Membership</p>
           <h2 className="text-xl font-semibold text-ink">Glow Circle</h2>
           <p className="text-sm text-charcoal/70">
@@ -229,7 +250,7 @@ export default function ProfilePage() {
           <Button className="w-full">Upgrade membership</Button>
         </div>
 
-        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-3">
+        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-3 animate-fade-up [animation-delay:120ms]">
           <p className="text-sm font-semibold text-ink">Upcoming benefits</p>
           <ul className="text-sm text-charcoal/70 space-y-2">
             <li>• Complimentary bridal touch-ups</li>
