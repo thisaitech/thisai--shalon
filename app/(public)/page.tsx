@@ -22,6 +22,7 @@ import {
 import Carousel from '@/components/ui/carousel';
 import CustomerContainer from '@/components/layout/CustomerContainer';
 import { salons } from '@/lib/data';
+import { useUserProfile } from '@/lib/firebase/useUserProfile';
 
 const salon = salons[0];
 
@@ -101,6 +102,7 @@ const stylists: Stylist[] = [
 export default function HomePage() {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState(categories[0].id);
+  const { profile } = useUserProfile();
 
   const greeting = useMemo(() => {
     const hour = new Date().getHours();
@@ -109,12 +111,16 @@ export default function HomePage() {
     return 'Good Evening!';
   }, []);
 
+  const firstName = (profile?.firstName || '').trim();
+
   return (
     <div className="min-h-screen pb-32">
       <CustomerContainer className="pt-7 space-y-6">
         <header className="flex items-start justify-between">
           <div className="space-y-1">
-            <p className="text-xs text-charcoal/60">Hello</p>
+            <p className="text-xs text-charcoal/60">
+              {firstName ? `Hello ${firstName}` : 'Hello'}
+            </p>
             <h1 className="text-2xl font-semibold text-ink">{greeting}</h1>
             <p className="text-xs text-charcoal/60 flex items-center gap-1.5">
               <MapPin size={14} className="text-primary" />

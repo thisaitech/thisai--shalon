@@ -14,6 +14,7 @@ export type UserProfile = {
     marketing: boolean;
   };
   createdAt: string;
+  updatedAt?: string;
 };
 
 export async function ensureUserProfile(user: User, role: UserProfile['role']) {
@@ -21,6 +22,7 @@ export async function ensureUserProfile(user: User, role: UserProfile['role']) {
   const ref = doc(db, 'users', user.uid);
   const snap = await getDoc(ref);
   if (!snap.exists()) {
+    const now = new Date().toISOString();
     await setDoc(ref, {
       uid: user.uid,
       email: user.email ?? null,
@@ -32,7 +34,8 @@ export async function ensureUserProfile(user: User, role: UserProfile['role']) {
         reminders: true,
         marketing: false
       },
-      createdAt: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now
     });
     return;
   }

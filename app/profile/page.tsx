@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
 import { updateUserProfile, type UserProfile } from '@/lib/firebase/user';
@@ -36,6 +36,9 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
+
+  const lastNameRef = useRef<HTMLInputElement | null>(null);
+  const phoneRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     if (!auth || !db) {
@@ -110,13 +113,26 @@ export default function ProfilePage() {
         preferences: {
           reminders: form.reminders,
           marketing: form.marketing
-        }
+        },
+        updatedAt: new Date().toISOString()
       });
       setStatus('Profile updated.');
+      window.setTimeout(() => setStatus(null), 2500);
     } catch (err) {
       setError((err as Error).message || 'Unable to save profile.');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      document.cookie = 'lumiere_auth=; path=/; max-age=0; samesite=lax';
+      window.location.href = '/login';
+    } catch (err) {
+      setError((err as Error).message || 'Unable to sign out.');
     }
   };
 
@@ -176,7 +192,13 @@ export default function ProfilePage() {
             </div>
           ) : (
             <>
-              <div className="space-y-4">
+              <form
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleSave();
+                }}
+                className="space-y-4"
+              >
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First name</Label>
                   <Input
@@ -185,6 +207,12 @@ export default function ProfilePage() {
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, firstName: event.target.value }))
                     }
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        lastNameRef.current?.focus();
+                      }
+                    }}
                     autoComplete="given-name"
                     enterKeyHint="next"
                     className="rounded-full bg-white/90 border border-white/80 shadow-soft px-6 min-h-[56px]"
@@ -193,11 +221,18 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   <Label htmlFor="lastName">Last name</Label>
                   <Input
+                    ref={lastNameRef}
                     id="lastName"
                     value={form.lastName}
                     onChange={(event) =>
                       setForm((prev) => ({ ...prev, lastName: event.target.value }))
                     }
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        phoneRef.current?.focus();
+                      }
+                    }}
                     autoComplete="family-name"
                     enterKeyHint="next"
                     className="rounded-full bg-white/90 border border-white/80 shadow-soft px-6 min-h-[56px]"
@@ -217,6 +252,7 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
                   <Input
+                    ref={phoneRef}
                     id="phone"
                     type="tel"
                     inputMode="tel"
@@ -230,52 +266,62 @@ export default function ProfilePage() {
                     className="rounded-full bg-white/90 border border-white/80 shadow-soft px-6 min-h-[56px]"
                   />
                 </div>
-              </div>
 
-              <div className="rounded-[32px] bg-secondary/70 border border-white/70 p-5 space-y-3">
-                <p className="text-sm font-semibold text-ink">Preferences</p>
-                <div className="flex items-center justify-between gap-4 text-sm">
-                  <span className="text-charcoal/80">Appointment reminders</span>
-                  <input
-                    type="checkbox"
-                    checked={form.reminders}
-                    onChange={(event) =>
-                      setForm((prev) => ({ ...prev, reminders: event.target.checked }))
-                    }
-                    className="h-6 w-6 rounded-md border border-primary/20 accent-primary"
-                    aria-label="Appointment reminders"
-                  />
+                <div className="rounded-[32px] bg-secondary/70 border border-white/70 p-5 space-y-3">
+                  <p className="text-sm font-semibold text-ink">Preferences</p>
+                  <div className="flex items-center justify-between gap-4 text-sm">
+                    <span className="text-charcoal/80">Appointment reminders</span>
+                    <input
+                      type="checkbox"
+                      checked={form.reminders}
+                      onChange={(event) =>
+                        setForm((prev) => ({ ...prev, reminders: event.target.checked }))
+                      }
+                      className="h-6 w-6 rounded-md border border-primary/20 accent-primary"
+                      aria-label="Appointment reminders"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between gap-4 text-sm">
+                    <span className="text-charcoal/80">New offers</span>
+                    <input
+                      type="checkbox"
+                      checked={form.marketing}
+                      onChange={(event) =>
+                        setForm((prev) => ({ ...prev, marketing: event.target.checked }))
+                      }
+                      className="h-6 w-6 rounded-md border border-primary/20 accent-primary"
+                      aria-label="New offers"
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center justify-between gap-4 text-sm">
-                  <span className="text-charcoal/80">New offers</span>
-                  <input
-                    type="checkbox"
-                    checked={form.marketing}
-                    onChange={(event) =>
-                      setForm((prev) => ({ ...prev, marketing: event.target.checked }))
-                    }
-                    className="h-6 w-6 rounded-md border border-primary/20 accent-primary"
-                    aria-label="New offers"
-                  />
-                </div>
-              </div>
 
-              <div className="flex flex-col gap-3">
-                <Button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className={cn('w-full rounded-full min-h-[60px] text-base font-semibold')}
+                <div className="flex flex-col gap-3">
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className={cn('w-full rounded-full min-h-[60px] text-base font-semibold')}
+                  >
+                    {saving ? (
+                      <span className="flex items-center gap-2">
+                        <Spinner className="h-4 w-4 border-white/40 border-t-white" />
+                        Saving...
+                      </span>
+                    ) : (
+                      'Save changes'
+                    )}
+                  </Button>
+                  {status ? <span className="text-sm text-primary">{status}</span> : null}
+                </div>
+              </form>
+
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="w-full text-center text-sm text-charcoal/70 hover:text-primary transition-colors"
                 >
-                  {saving ? (
-                    <span className="flex items-center gap-2">
-                      <Spinner className="h-4 w-4 border-white/40 border-t-white" />
-                      Saving...
-                    </span>
-                  ) : (
-                    'Save changes'
-                  )}
-                </Button>
-                {status ? <span className="text-sm text-primary">{status}</span> : null}
+                  Sign out
+                </button>
               </div>
             </>
           )}

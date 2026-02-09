@@ -7,6 +7,7 @@ import Footer from '@/components/layout/Footer';
 import MobileNav from '@/components/layout/MobileNav';
 import NavProgress from '@/components/layout/NavProgress';
 import RouteTransition from '@/components/layout/RouteTransition';
+import AuthCookieSync from '@/components/auth/AuthCookieSync';
 
 const inter = Manrope({
   subsets: ['latin'],
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <div className="min-h-screen flex flex-col app-shell">
           <NavProgress />
+          <AuthCookieSync />
           <div className="hidden md:block">
             <Navbar />
           </div>
