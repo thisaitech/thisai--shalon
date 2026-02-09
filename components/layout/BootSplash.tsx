@@ -19,9 +19,9 @@ export default function BootSplash() {
     }
 
     setMounted(true);
-    // Keep it crisp: show ~1s, then fade out quickly.
-    const hideTimer = window.setTimeout(() => setHidden(true), 1000);
-    const unmountTimer = window.setTimeout(() => setMounted(false), 1300);
+    // Keep it crisp: total splash time ~1s (including fade).
+    const hideTimer = window.setTimeout(() => setHidden(true), 800);
+    const unmountTimer = window.setTimeout(() => setMounted(false), 1000);
     return () => {
       window.clearTimeout(hideTimer);
       window.clearTimeout(unmountTimer);
@@ -33,7 +33,7 @@ export default function BootSplash() {
   return (
     <div
       className={cn(
-        'fixed inset-0 z-[70] flex items-center justify-center bg-secondary/70 backdrop-blur-xl transition-opacity duration-300',
+        'fixed inset-0 z-[70] flex items-center justify-center bg-secondary/70 backdrop-blur-xl transition-opacity duration-200',
         hidden ? 'opacity-0 pointer-events-none' : 'opacity-100'
       )}
       role="status"
