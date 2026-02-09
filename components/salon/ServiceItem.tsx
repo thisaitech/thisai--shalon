@@ -26,8 +26,8 @@ export default function ServiceItem({
       type="button"
       onClick={onSelect}
       className={cn(
-        'group relative w-full text-left rounded-[28px] border border-white/70 bg-white/92 p-5 transition-transform hover:-translate-y-0.5 hover:shadow-glow focus-ring min-h-[168px] flex flex-col justify-between overflow-hidden',
-        selected ? 'border-primary/40 shadow-glow' : 'shadow-soft',
+        'group relative w-full text-left rounded-[28px] border border-white/70 bg-white/95 p-5 transition-transform hover:-translate-y-0.5 hover:shadow-glow focus-ring min-h-[176px] flex flex-col justify-between overflow-hidden',
+        selected ? 'border-primary/45 shadow-glow ring-2 ring-primary/15' : 'shadow-soft',
         'active:translate-y-0 active:scale-[0.99]'
       )}
     >
@@ -37,11 +37,11 @@ export default function ServiceItem({
             src={image}
             alt=""
             fill
-            className="object-cover opacity-20 scale-110 blur-[1px]"
+            className="object-cover opacity-12 scale-110"
             sizes="(max-width: 768px) 50vw, 220px"
             aria-hidden="true"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-white/95 via-white/92 to-white/85" />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/98 via-white/95 to-white/90" />
         </div>
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-primary/6 via-lilac/6 to-sky/10 opacity-70" />
@@ -49,7 +49,7 @@ export default function ServiceItem({
 
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[15px] font-semibold text-ink leading-snug line-clamp-2 min-h-[40px]">
+          <p className="text-[15px] font-semibold text-primary leading-snug line-clamp-2 min-h-[40px]">
             {name}
           </p>
           <p className="mt-1 text-xs text-charcoal/70 leading-snug line-clamp-2">

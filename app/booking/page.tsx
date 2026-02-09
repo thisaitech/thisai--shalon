@@ -15,7 +15,7 @@ export default function BookingPage({
   if (!salon) return notFound();
 
   return (
-    <div className="min-h-screen pb-36">
+    <div className="min-h-screen pb-40">
       <CustomerContainer className="pt-6 space-y-5">
         <header className="flex items-start justify-between">
           <Link
@@ -36,7 +36,7 @@ export default function BookingPage({
           <div className="h-10 w-10" aria-hidden="true" />
         </header>
 
-        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-5">
+        <div className="glass-panel rounded-[38px] p-6">
           <BookingFlow salon={salon} initialServiceId={searchParams?.service} />
         </div>
       </CustomerContainer>
