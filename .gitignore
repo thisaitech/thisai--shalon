@@ -20,6 +20,9 @@ firebase-debug.log
 # misc
 .DS_Store
 
+# build artifacts
+*.apk
+
 # firebase local state
 .firebase
 dataconnect
