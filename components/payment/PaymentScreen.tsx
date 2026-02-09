@@ -18,6 +18,7 @@ import Button from '@/components/ui/button';
 import Spinner from '@/components/ui/spinner';
 import Input from '@/components/ui/input';
 import Label from '@/components/ui/label';
+import { StepProgress } from '@/components/ui/progress';
 import { cn, formatCurrency, formatDate, formatTime } from '@/lib/utils';
 import type { Service } from '@/lib/data';
 import { auth } from '@/lib/firebase/client';
@@ -302,7 +303,9 @@ export default function PaymentScreen({
           <div className="h-10 w-10" aria-hidden="true" />
         </header>
 
-        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 overflow-hidden">
+        <StepProgress steps={['Service', 'Time', 'Payment']} current={3} />
+
+        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 overflow-hidden animate-fade-up">
           <div className="relative h-40">
             <Image
               src={serviceImage}
@@ -343,7 +346,7 @@ export default function PaymentScreen({
           </div>
         </div>
 
-        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-5 space-y-4">
+        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-5 space-y-4 animate-fade-up">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-semibold text-ink">Choose a payment method</p>
