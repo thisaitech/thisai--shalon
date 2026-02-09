@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 
 function isModifiedEvent(event: MouseEvent) {
@@ -19,6 +19,7 @@ function findAnchor(target: EventTarget | null) {
 export default function NavProgress() {
   const pathname = usePathname();
   const [active, setActive] = useState(false);
+  const fallbackTimerRef = useRef<number | null>(null);
 
   // `useSearchParams` would require a Suspense boundary in the root layout.
   // For a lightweight progress indicator, pathname is sufficient.
@@ -27,6 +28,10 @@ export default function NavProgress() {
   useEffect(() => {
     // Stop the bar once navigation has resolved (routeKey changes when it finishes).
     setActive(false);
+    if (fallbackTimerRef.current) {
+      window.clearTimeout(fallbackTimerRef.current);
+      fallbackTimerRef.current = null;
+    }
   }, [routeKey]);
 
   useEffect(() => {
@@ -53,6 +58,12 @@ export default function NavProgress() {
       }
 
       setActive(true);
+      if (fallbackTimerRef.current) window.clearTimeout(fallbackTimerRef.current);
+      // Safety: if navigation is interrupted, don't leave the bar stuck.
+      fallbackTimerRef.current = window.setTimeout(() => {
+        setActive(false);
+        fallbackTimerRef.current = null;
+      }, 5000);
     };
 
     const onPopState = () => setActive(true);
