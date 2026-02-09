@@ -166,7 +166,7 @@ export default function PaymentScreen({
         body: JSON.stringify({
           amount: summary.amountPaise,
           currency: 'INR',
-          receipt: `${salonId}-${service.id}-${date}-${time}`,
+          receipt: `bk_${Date.now()}`,
           notes: {
             salonId,
             serviceId: service.id,
@@ -545,4 +545,3 @@ export default function PaymentScreen({
     </div>
   );
 }
-
