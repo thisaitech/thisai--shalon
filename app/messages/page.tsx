@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MessageCircle, Send, Sparkles } from 'lucide-react';
+import CustomerContainer from '@/components/layout/CustomerContainer';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 
@@ -36,49 +37,53 @@ export default function MessagesPage() {
   const [activeThread, setActiveThread] = useState(threads[0]);
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12 space-y-8">
-      <div className="flex flex-col gap-3">
-        <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Messages</p>
-        <h1 className="text-4xl font-display text-gradient">Stay in the glow loop</h1>
-        <p className="text-sm text-charcoal/80 max-w-2xl">
-          Chat with your artist, confirm details, and keep every look perfectly timed.
-        </p>
-      </div>
+    <div className="min-h-screen pb-32">
+      <CustomerContainer className="pt-7 space-y-5">
+        <header className="space-y-1">
+          <p className="text-xs text-charcoal/60">Messages</p>
+          <h1 className="text-2xl font-semibold text-ink">Message your studio</h1>
+          <p className="text-sm text-charcoal/70">Confirm details and keep every look timed.</p>
+        </header>
 
-      <div className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="glass-panel p-4 space-y-4">
-          <div className="flex gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible">
+        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-4 space-y-3">
+          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
             {threads.map((thread) => (
               <button
                 key={thread.id}
-                className={`min-w-[220px] text-left rounded-2xl px-4 py-3 transition-all lg:min-w-0 ${
-                  thread.id === activeThread.id
-                    ? 'bg-white shadow-soft border border-white/80'
-                    : 'hover:bg-white/70'
-                }`}
+                type="button"
                 onClick={() => setActiveThread(thread)}
+                className={
+                  thread.id === activeThread.id
+                    ? 'shrink-0 rounded-2xl bg-primary text-white px-4 py-3 text-left shadow-glow min-w-[220px]'
+                    : 'shrink-0 rounded-2xl bg-white/95 border border-white/70 px-4 py-3 text-left shadow-soft min-w-[220px]'
+                }
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-medium text-primary">{thread.name}</p>
-                  <span className="text-xs text-charcoal/50">{thread.time}</span>
+                  <p className="text-sm font-semibold">{thread.name}</p>
+                  <span className={thread.id === activeThread.id ? 'text-xs text-white/70' : 'text-xs text-charcoal/50'}>
+                    {thread.time}
+                  </span>
                 </div>
-                <p className="text-xs text-charcoal/60 mt-1">{thread.preview}</p>
+                <p className={thread.id === activeThread.id ? 'text-xs text-white/80 mt-1' : 'text-xs text-charcoal/60 mt-1'}>
+                  {thread.preview}
+                </p>
               </button>
             ))}
           </div>
-          <div className="card-surface p-4 text-sm text-charcoal/80 flex items-center gap-3">
-            <Sparkles size={16} className="text-primary" />
+
+          <div className="rounded-2xl bg-secondary/80 border border-white/70 p-3 text-xs text-charcoal/70 flex items-center gap-2">
+            <Sparkles size={14} className="text-primary" />
             New booking alerts appear here.
           </div>
         </div>
 
-        <div className="card-spotlight p-6 space-y-4">
+        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-5 space-y-4">
           <div className="flex items-center gap-3">
-            <span className="icon-orb">
+            <span className="h-10 w-10 rounded-2xl bg-primary/10 text-primary shadow-soft flex items-center justify-center">
               <MessageCircle size={18} />
             </span>
             <div>
-              <p className="text-sm font-medium text-primary">{activeThread.name}</p>
+              <p className="text-sm font-semibold text-ink">{activeThread.name}</p>
               <p className="text-xs text-charcoal/60">Online · replies in minutes</p>
             </div>
           </div>
@@ -87,11 +92,11 @@ export default function MessagesPage() {
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
+                className={
                   message.from === 'user'
-                    ? 'ml-auto bg-gradient-to-r from-primary via-lilac to-accent text-white'
-                    : 'bg-white/85 text-charcoal'
-                }`}
+                    ? 'ml-auto max-w-[85%] rounded-2xl px-4 py-3 text-sm bg-primary text-white shadow-soft'
+                    : 'max-w-[85%] rounded-2xl px-4 py-3 text-sm bg-white/95 border border-white/70 shadow-soft'
+                }
               >
                 {message.text}
               </div>
@@ -105,7 +110,7 @@ export default function MessagesPage() {
             </Button>
           </div>
         </div>
-      </div>
+      </CustomerContainer>
     </div>
   );
 }

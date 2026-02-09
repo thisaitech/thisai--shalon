@@ -5,6 +5,7 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase/client';
 import { updateUserProfile, type UserProfile } from '@/lib/firebase/user';
+import CustomerContainer from '@/components/layout/CustomerContainer';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Label from '@/components/ui/label';
@@ -116,19 +117,19 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-12 space-y-8">
-      <div>
-        <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Profile</p>
-        <h1 className="text-4xl font-display text-gradient">Your profile</h1>
-        <p className="text-sm text-charcoal/80 max-w-2xl">
-          Keep your bridal, groom, and glow preferences ready for every booking.
-        </p>
-      </div>
+    <div className="min-h-screen pb-32">
+      <CustomerContainer className="pt-7 space-y-6">
+        <header className="space-y-1">
+          <p className="text-xs text-charcoal/60">Profile</p>
+          <h1 className="text-2xl font-semibold text-ink">Your profile</h1>
+          <p className="text-sm text-charcoal/70">
+            Keep your preferences ready for every booking.
+          </p>
+        </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="glass-panel rounded-3xl p-8 space-y-6">
+        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-6">
           {loading ? (
-            <div className="flex items-center gap-3 text-sm text-charcoal/80">
+            <div className="flex items-center gap-3 text-sm text-charcoal/70">
               <Spinner className="h-4 w-4 border-primary/30 border-t-primary" />
               Loading profile...
             </div>
@@ -138,7 +139,7 @@ export default function ProfilePage() {
             </p>
           ) : (
             <>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="firstName">First name</Label>
                   <Input
@@ -176,8 +177,8 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="card-surface p-5 space-y-3">
-                <p className="text-sm font-medium text-primary">Preferences</p>
+              <div className="rounded-2xl bg-secondary/70 border border-white/70 p-4 space-y-3">
+                <p className="text-sm font-semibold text-ink">Preferences</p>
                 <div className="flex items-center justify-between text-sm">
                   <span>Appointment reminders</span>
                   <input
@@ -190,7 +191,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span>New studio openings</span>
+                  <span>New offers</span>
                   <input
                     type="checkbox"
                     checked={form.marketing}
@@ -202,8 +203,8 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <Button className="w-full sm:w-auto" onClick={handleSave} disabled={saving}>
+              <div className="flex flex-col gap-3">
+                <Button onClick={handleSave} disabled={saving} className="w-full">
                   {saving ? (
                     <span className="flex items-center gap-2">
                       <Spinner className="h-4 w-4 border-white/40 border-t-white" />
@@ -213,31 +214,30 @@ export default function ProfilePage() {
                     'Save changes'
                   )}
                 </Button>
-                {status ? <span className="text-sm text-accent">{status}</span> : null}
+                {status ? <span className="text-sm text-primary">{status}</span> : null}
               </div>
             </>
           )}
         </div>
 
-        <div className="space-y-4">
-          <div className="card-spotlight p-6 space-y-3">
-            <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Membership</p>
-            <h2 className="text-2xl font-display text-primary">Glow Circle</h2>
-            <p className="text-sm text-charcoal/80">
-              Priority booking, bridal trials, and spa upgrades every month.
-            </p>
-            <Button className="w-full">Upgrade membership</Button>
-          </div>
-          <div className="card-surface p-6 space-y-3">
-            <p className="text-sm font-medium text-primary">Upcoming benefits</p>
-            <ul className="text-sm text-charcoal/80 space-y-2">
-              <li>• Complimentary bridal touch-ups</li>
-              <li>• Groom grooming add-ons</li>
-              <li>• 15% off hair spa rituals</li>
-            </ul>
-          </div>
+        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-3">
+          <p className="text-xs text-charcoal/60">Membership</p>
+          <h2 className="text-xl font-semibold text-ink">Glow Circle</h2>
+          <p className="text-sm text-charcoal/70">
+            Priority booking, bridal trials, and spa upgrades every month.
+          </p>
+          <Button className="w-full">Upgrade membership</Button>
         </div>
-      </div>
+
+        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 space-y-3">
+          <p className="text-sm font-semibold text-ink">Upcoming benefits</p>
+          <ul className="text-sm text-charcoal/70 space-y-2">
+            <li>• Complimentary bridal touch-ups</li>
+            <li>• Groom grooming add-ons</li>
+            <li>• 15% off hair spa rituals</li>
+          </ul>
+        </div>
+      </CustomerContainer>
     </div>
   );
 }

@@ -14,7 +14,13 @@ import type { Salon, Service } from '@/lib/data';
 
 const steps = ['Service', 'Time', 'Confirm'];
 
-export default function BookingFlow({ salon }: { salon: Salon }) {
+export default function BookingFlow({
+  salon,
+  initialServiceId
+}: {
+  salon: Salon;
+  initialServiceId?: string;
+}) {
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -24,6 +30,15 @@ export default function BookingFlow({ salon }: { salon: Salon }) {
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!initialServiceId) return;
+    setSelectedService((current) => {
+      if (current) return current;
+      return salon.services.find((service) => service.id === initialServiceId) ?? null;
+    });
+    setStep((current) => (current === 1 ? 2 : current));
+  }, [initialServiceId, salon.services]);
 
   useEffect(() => {
     if (!auth) {

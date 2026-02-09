@@ -1,304 +1,300 @@
 'use client';
 
-import Link from 'next/link';
+import { useMemo, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
-  CalendarCheck,
+  Bell,
+  ChevronRight,
   Crown,
   Heart,
-  MessageCircle,
+  Leaf,
+  MapPin,
+  Paintbrush2,
+  Search,
   Scissors,
+  SlidersHorizontal,
   Sparkles,
-  SprayCan,
   Star,
-  User
+  User,
+  type LucideIcon
 } from 'lucide-react';
 import Carousel from '@/components/ui/carousel';
-import PromoModal from '@/components/ui/promo-modal';
+import CustomerContainer from '@/components/layout/CustomerContainer';
 import { salons } from '@/lib/data';
 
 const salon = salons[0];
 
-const categoryTiles = [
-  {
-    label: 'Indian Bridal',
-    description: 'HD makeup · draping · jewelry',
-    icon: Crown
-  },
-  {
-    label: 'Groom Makeover',
-    description: 'Skin prep · beard sculpt',
-    icon: User
-  },
-  {
-    label: 'Makeover & Party',
-    description: 'Soft glam · statement eyes',
-    icon: Sparkles
-  },
-  {
-    label: 'Hairstyle & Blowout',
-    description: 'Volume sets · sleek finish',
-    icon: Scissors
-  },
-  {
-    label: 'Bridal Reception',
-    description: 'Soft glam · waves · lashes',
-    icon: Heart
-  },
-  {
-    label: 'Hair Spa & Scalp',
-    description: 'Steam therapy · oils',
-    icon: SprayCan
-  },
-  {
-    label: 'Skin & Glow',
-    description: 'Radiance facials · peels',
-    icon: Star
-  }
+type Category = {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+};
+
+type Offer = {
+  title: string;
+  discount: string;
+  date: string;
+  image: string;
+};
+
+type Stylist = {
+  name: string;
+  role: string;
+  exp: string;
+  rating: number;
+  avatar: string;
+};
+
+const categories: Category[] = [
+  { id: 'hair', label: 'Haircuts', icon: Scissors },
+  { id: 'nails', label: 'Nail', icon: Paintbrush2 },
+  { id: 'facial', label: 'Facial', icon: Sparkles },
+  { id: 'bridal', label: 'Bridal', icon: Crown },
+  { id: 'treatments', label: 'Treatments', icon: Leaf },
+  { id: 'groom', label: 'Groom', icon: User }
 ];
 
-const slides = [
+const offers: Offer[] = [
   {
-    title: 'Bridal Season Edit',
-    subtitle: 'Signature drape · HD finish · touch-up kit',
-    image:
-      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1400&q=80'
-  },
-  {
-    title: 'Grooming House',
-    subtitle: 'Shape · cleanse · confidence',
+    title: 'Haircut',
+    discount: '20% Off',
+    date: 'Jul 16 - Jul 24',
     image:
       'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1400&q=80'
   },
   {
-    title: 'Glow Rituals',
-    subtitle: 'Skin, nails, and hair ceremonies',
+    title: 'Bridal',
+    discount: 'Bundle Save',
+    date: 'Trial + main day',
+    image:
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1400&q=80'
+  },
+  {
+    title: 'First Visit',
+    discount: '15% Off',
+    date: 'New clients only',
     image:
       'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1400&q=80'
   }
 ];
 
-const quickActions = [
-  { label: 'Book', href: '/booking', icon: CalendarCheck },
-  { label: 'Saved', href: '/favorites', icon: Heart },
-  { label: 'Message', href: '/messages', icon: MessageCircle },
-  { label: 'Profile', href: '/profile', icon: User }
-];
-
-const spotlightServices = [
+const stylists: Stylist[] = [
   {
-    id: 'bridal',
-    title: 'Bridal Couture',
-    price: '$260',
-    note: 'HD glam · drape · jewelry',
-    image:
-      'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&w=1200&q=80'
+    name: 'Bella Grace',
+    role: 'Hair Stylist',
+    exp: '6 yrs exp',
+    rating: 4.9,
+    avatar:
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=240&q=80'
   },
   {
-    id: 'groom',
-    title: 'Groom Studio',
-    price: '$120',
-    note: 'Skin prep · beard sculpt',
-    image:
-      'https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1200&q=80'
-  },
-  {
-    id: 'spa',
-    title: 'Hair Spa Ritual',
-    price: '$70',
-    note: 'Steam · oils · scalp reset',
-    image:
-      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80'
+    name: 'Daisy Scarlett',
+    role: 'Hair Spa',
+    exp: '5 yrs exp',
+    rating: 4.8,
+    avatar:
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=240&q=80'
   }
 ];
 
 export default function HomePage() {
-  return (
-    <div className="app-shell">
-      <PromoModal />
+  const [search, setSearch] = useState('');
+  const [activeCategory, setActiveCategory] = useState(categories[0].id);
 
-      <section className="max-w-6xl mx-auto px-6 pt-8 pb-8 space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Good morning</p>
-            <h1 className="text-3xl md:text-4xl font-display text-gradient">
-              Ready for your glow?
-            </h1>
-            <p className="text-sm text-charcoal/80 mt-2">
-              Bridal, groom, and unisex rituals curated for every moment.
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good Morning!';
+    if (hour < 18) return 'Good Afternoon!';
+    return 'Good Evening!';
+  }, []);
+
+  return (
+    <div className="min-h-screen pb-32">
+      <CustomerContainer className="pt-7 space-y-6">
+        <header className="flex items-start justify-between">
+          <div className="space-y-1">
+            <p className="text-xs text-charcoal/60">Hello</p>
+            <h1 className="text-2xl font-semibold text-ink">{greeting}</h1>
+            <p className="text-xs text-charcoal/60 flex items-center gap-1.5">
+              <MapPin size={14} className="text-primary" />
+              {salon.location}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Link href="/messages" className="icon-orb">
-              <MessageCircle size={18} />
-            </Link>
-            <Link href="/profile" className="icon-orb">
-              <User size={18} />
-            </Link>
+          <button
+            type="button"
+            className="h-11 w-11 rounded-2xl bg-white/90 shadow-soft border border-white/70 flex items-center justify-center"
+            aria-label="Notifications"
+          >
+            <Bell size={18} className="text-primary" />
+          </button>
+        </header>
+
+        <div className="flex items-center gap-3">
+          <div className="flex-1 rounded-2xl bg-white/90 shadow-soft border border-white/70 px-4 h-12 flex items-center gap-3">
+            <Search size={16} className="text-charcoal/40" />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search services, makeup, hairstyle..."
+              className="w-full bg-transparent outline-none text-sm text-ink placeholder:text-charcoal/40"
+              aria-label="Search"
+            />
           </div>
+          <button
+            type="button"
+            className="h-12 w-12 rounded-2xl bg-white/90 shadow-soft border border-white/70 flex items-center justify-center"
+            aria-label="Filters"
+          >
+            <SlidersHorizontal size={18} className="text-primary" />
+          </button>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr] items-start">
-          <div className="space-y-4 animate-fade-up">
-            <div className="card-spotlight p-6 relative overflow-hidden">
-              <div className="absolute -right-16 -top-20 h-40 w-40 rounded-full bg-primary/20 blur-3xl" />
-              <div className="absolute -left-12 bottom-0 h-32 w-32 rounded-full bg-accent/30 blur-3xl" />
-              <div className="relative z-10 space-y-3">
-                <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Lumiére Studio</p>
-                <h2 className="text-2xl font-display text-primary">
-                  {salon.name}
-                </h2>
-                <p className="text-sm text-charcoal/80">
-                  Single studio · Bridal · Groom · Unisex · {salon.location}
-                </p>
-              </div>
-              <div className="relative mt-6 h-48 w-full overflow-hidden rounded-2xl">
-                <Image
-                  src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1400&q=80"
-                  alt="Studio"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 55vw"
-                />
-              </div>
-              <div className="mt-5 flex flex-wrap gap-3">
-                <Link
-                  href={`/booking?salon=${salon.id}`}
-                  className="inline-flex items-center justify-center min-h-[44px] rounded-2xl bg-gradient-to-r from-primary via-lilac to-accent text-white px-5 py-2 text-sm font-medium shadow-glow"
-                >
-                  Book appointment
-                </Link>
-                <Link
-                  href={`/salon/${salon.id}`}
-                  className="inline-flex items-center justify-center min-h-[44px] rounded-2xl border border-primary/20 px-5 py-2 text-sm font-medium text-primary"
-                >
-                  View studio
-                </Link>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {quickActions.map(({ label, href, icon: Icon }) => (
-                <Link
-                  key={label}
-                  href={href}
-                  className="card-spotlight p-4 flex flex-col items-start gap-3 transition-all hover:-translate-y-1"
-                >
-                  <span className="icon-orb">
-                    <Icon size={18} />
-                  </span>
-                  <span className="text-sm font-medium text-primary">{label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-4 animate-fade-up">
-            <Carousel className="rounded-3xl">
-              {slides.map((slide) => (
-                <div key={slide.title} className="relative h-64 w-full overflow-hidden rounded-3xl">
-                  <Image
-                    src={slide.image}
-                    alt={slide.title}
-                    fill
-                    className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 40vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-transparent" />
-                  <div className="absolute bottom-4 left-4 right-4 text-white space-y-1">
-                    <p className="text-xs uppercase tracking-[0.35em] text-white/70">Special</p>
-                    <p className="text-xl font-display">{slide.title}</p>
-                    <p className="text-sm text-white/80">{slide.subtitle}</p>
-                  </div>
-                </div>
-              ))}
-            </Carousel>
-
-            <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
-              {spotlightServices.map((service) => (
-                <div key={service.id} className="card-spotlight overflow-hidden">
-                  <div className="relative h-32 w-full">
-                    <Image
-                      src={service.image}
-                      alt={service.title}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 1024px) 100vw, 30vw"
-                    />
-                  </div>
-                  <div className="p-4 space-y-1">
-                    <p className="text-sm font-medium text-primary">{service.title}</p>
-                    <p className="text-xs text-charcoal/60">{service.note}</p>
-                    <p className="text-sm font-medium text-primary">{service.price}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-6 pb-8 space-y-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-display text-primary">Styles & services</h2>
-          <span className="pill bg-white/90">Indian bridal to daily glam</span>
-        </div>
-        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(160px,1fr))]">
-          {categoryTiles.map((service) => {
-            const Icon = service.icon;
+        <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-5 px-5">
+          {categories.map((category) => {
+            const Icon = category.icon;
+            const selected = category.id === activeCategory;
             return (
-              <div key={service.label} className="card-spotlight p-5 space-y-3">
-                <div className="icon-orb">
-                  <Icon size={20} />
-                </div>
-                <div>
-                  <p className="font-medium text-primary">{service.label}</p>
-                  <p className="text-sm text-charcoal/80">{service.description}</p>
-                </div>
-              </div>
+              <button
+                key={category.id}
+                type="button"
+                onClick={() => setActiveCategory(category.id)}
+                className={
+                  selected
+                    ? 'shrink-0 inline-flex items-center gap-2 rounded-full bg-primary text-white px-4 py-2 text-xs font-medium shadow-glow'
+                    : 'shrink-0 inline-flex items-center gap-2 rounded-full bg-white/90 text-ink px-4 py-2 text-xs font-medium shadow-soft border border-white/70'
+                }
+              >
+                <Icon size={14} />
+                {category.label}
+              </button>
             );
           })}
         </div>
-      </section>
 
-      <section className="max-w-6xl mx-auto px-6 pb-12 space-y-6">
-        <div className="flex items-center justify-between">
-          <h3 className="text-xl font-display text-primary">Signature services</h3>
-          <span className="pill bg-white/90">Instant booking</span>
-        </div>
-        <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
-          {salon.services.slice(0, 6).map((service) => (
-            <div key={service.id} className="card-surface p-5 flex items-center justify-between">
-              <div>
-                <p className="font-medium text-primary">{service.name}</p>
-                <p className="text-sm text-charcoal/80">{service.description}</p>
-              </div>
-              <div className="text-right text-sm text-charcoal/80">
-                <p className="font-medium text-primary">${service.price}</p>
-                <p>{service.duration} min</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="max-w-6xl mx-auto px-6 pb-16">
-        <div className="glass-panel rounded-3xl p-8 flex flex-col lg:flex-row items-center justify-between gap-6">
-          <div className="space-y-2">
-            <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Appointments</p>
-            <h3 className="text-2xl font-display text-primary">Reserve a premium slot today</h3>
-            <p className="text-sm text-charcoal/80">
-              Same-day bookings for bridal trials, groom makeovers, hair spa, and glow facials.
-            </p>
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-ink">Special Offers</h2>
+            <Link href="/salons" className="text-xs font-medium text-primary">
+              See all
+            </Link>
           </div>
-          <Link
-            href={`/booking?salon=${salon.id}`}
-            className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-primary via-lilac to-accent text-white px-6 py-3 text-sm font-medium shadow-glow"
-          >
-            Reserve now
-          </Link>
-        </div>
-      </section>
+          <Carousel className="rounded-3xl">
+            {offers.map((offer) => (
+              <div key={offer.title} className="relative h-44 w-full overflow-hidden rounded-3xl">
+                <Image
+                  src={offer.image}
+                  alt={offer.title}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 440px"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-primary/80 via-primary/55 to-transparent" />
+                <div className="absolute inset-0 p-5 flex flex-col justify-between text-white">
+                  <div>
+                    <p className="text-xs font-medium opacity-90">{offer.title}</p>
+                    <p className="text-3xl font-semibold">{offer.discount}</p>
+                    <p className="text-xs text-white/80 mt-1">{offer.date}</p>
+                  </div>
+                  <Link
+                    href="/booking"
+                    className="inline-flex items-center gap-2 self-start rounded-full bg-white/20 border border-white/30 px-4 py-2 text-sm"
+                  >
+                    Get Offer Now <ChevronRight size={16} />
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </Carousel>
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-ink">Pro Care at Home</h2>
+            <button type="button" className="text-xs font-medium text-primary">
+              See all
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {stylists.map((stylist) => (
+              <div
+                key={stylist.name}
+                className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-4 space-y-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative h-11 w-11 overflow-hidden rounded-full">
+                    <Image
+                      src={stylist.avatar}
+                      alt={stylist.name}
+                      fill
+                      className="object-cover"
+                      sizes="44px"
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-ink truncate">{stylist.name}</p>
+                    <p className="text-xs text-charcoal/60 truncate">{stylist.role}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs text-charcoal/60">
+                  <span>{stylist.exp}</span>
+                  <span className="inline-flex items-center gap-1 text-primary font-medium">
+                    <Star size={12} fill="currentColor" />
+                    {stylist.rating.toFixed(1)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-ink">Nearby Salons</h2>
+            <Link href={`/salon/${salon.id}`} className="text-xs font-medium text-primary">
+              See all
+            </Link>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-2 no-scrollbar -mx-5 px-5">
+            <Link
+              href={`/salon/${salon.id}`}
+              className="min-w-[280px] rounded-3xl bg-white/92 shadow-soft border border-white/70 overflow-hidden"
+            >
+              <div className="relative h-36 w-full">
+                <Image
+                  src={salon.image}
+                  alt={salon.name}
+                  fill
+                  className="object-cover"
+                  sizes="280px"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/40 via-transparent to-transparent" />
+                <button
+                  type="button"
+                  className="absolute right-3 top-3 h-9 w-9 rounded-full bg-white/95 shadow-soft flex items-center justify-center"
+                  aria-label="Save salon"
+                >
+                  <Heart size={16} className="text-primary" />
+                </button>
+              </div>
+              <div className="p-4 space-y-1">
+                <p className="text-sm font-semibold text-ink">{salon.name}</p>
+                <p className="text-xs text-charcoal/60 flex items-center gap-1.5">
+                  <MapPin size={12} className="text-primary" />
+                  {salon.location}
+                </p>
+              </div>
+            </Link>
+          </div>
+        </section>
+      </CustomerContainer>
+
+      <Link
+        href="/booking"
+        className="md:hidden fixed bottom-24 right-5 z-40 rounded-full bg-primary text-white px-5 py-3 text-sm font-semibold shadow-glow"
+      >
+        Book Now
+      </Link>
     </div>
   );
 }

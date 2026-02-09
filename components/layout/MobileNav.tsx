@@ -25,13 +25,14 @@ export default function MobileNav() {
   if (
     pathname.startsWith('/owner') ||
     pathname.startsWith('/login') ||
-    pathname.startsWith('/signup')
+    pathname.startsWith('/signup') ||
+    pathname.startsWith('/welcome')
   ) {
     return null;
   }
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-40 w-[min(520px,94vw)] -translate-x-1/2 rounded-[28px] bg-white/90 shadow-glow border border-white/70 px-3 py-2 backdrop-blur-xl md:hidden">
+    <div className="fixed bottom-4 left-1/2 z-40 w-[min(520px,94vw)] -translate-x-1/2 rounded-[28px] bg-white/92 shadow-glow border border-white/70 px-2 py-2 backdrop-blur-xl md:hidden">
       <nav className="flex items-center justify-between">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href;
@@ -40,19 +41,19 @@ export default function MobileNav() {
               key={href}
               href={href}
               className={cn(
-                'flex flex-col items-center gap-1 text-[10px] font-medium text-charcoal/60 transition-all',
-                isActive && 'text-primary'
+                'flex flex-1 flex-col items-center gap-1 py-1 text-[10px] font-medium transition-all',
+                isActive ? 'text-primary' : 'text-charcoal/55'
               )}
             >
               <span
                 className={cn(
-                  'flex h-10 w-10 items-center justify-center rounded-full transition-all',
-                  isActive && 'bg-gradient-to-r from-primary via-lilac to-accent text-white shadow-glow'
+                  'flex h-10 w-10 items-center justify-center rounded-2xl transition-all',
+                  isActive ? 'bg-primary/12 text-primary' : 'text-charcoal/45'
                 )}
               >
                 <Icon size={18} />
               </span>
-              {label}
+              <span className={cn(isActive ? 'text-primary' : 'text-charcoal/55')}>{label}</span>
             </Link>
           );
         })}

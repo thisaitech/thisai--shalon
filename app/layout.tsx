@@ -32,9 +32,13 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body>
         <div className="min-h-screen flex flex-col app-shell">
-          <Navbar />
+          <div className="hidden md:block">
+            <Navbar />
+          </div>
           <main className="flex-1 pb-28 md:pb-0">{children}</main>
-          <Footer />
+          <div className="hidden md:block">
+            <Footer />
+          </div>
           <MobileNav />
         </div>
       </body>
