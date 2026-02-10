@@ -134,6 +134,7 @@ export default function BookingFlow({
   initialServiceId?: string;
 }) {
   const router = useRouter();
+  const [services, setServices] = useState<Service[]>(salon.services);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
@@ -145,14 +146,32 @@ export default function BookingFlow({
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
+  // Fetch services from API (Firestore) with fallback to static data
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const res = await fetch(`/api/services?salonId=${salon.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.services && data.services.length > 0) {
+            setServices(data.services);
+          }
+        }
+      } catch {
+        // Keep static services as fallback
+      }
+    };
+    fetchServices();
+  }, [salon.id]);
+
   useEffect(() => {
     if (!initialServiceId) return;
     setSelectedService((current) => {
       if (current) return current;
-      return salon.services.find((service) => service.id === initialServiceId) ?? null;
+      return services.find((service) => service.id === initialServiceId) ?? null;
     });
     setStep((current) => (current === 1 ? 2 : current));
-  }, [initialServiceId, salon.services]);
+  }, [initialServiceId, services]);
 
   useEffect(() => {
     if (!auth) {
@@ -238,7 +257,7 @@ export default function BookingFlow({
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-display text-ink">Choose Service</h2>
-            <p className="text-xs text-charcoal/60 mt-0.5">{salon.services.length} services available</p>
+            <p className="text-xs text-charcoal/60 mt-0.5">{services.length} services available</p>
           </div>
         </div>
 
@@ -261,7 +280,7 @@ export default function BookingFlow({
 
         {/* Services Grid */}
         <div className="grid grid-cols-2 gap-3">
-          {salon.services.map((service) => {
+          {services.map((service) => {
             const img = serviceImages[service.id] ?? salon.image;
             const isSelected = selectedService?.id === service.id;
             const discount = Math.floor(Math.random() * 15) + 10; // Visual only
