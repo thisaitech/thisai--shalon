@@ -5,6 +5,7 @@ const items = [
   { href: '/owner/calendar', label: 'Calendar' },
   { href: '/owner/customers', label: 'Customers' },
   { href: '/owner/services', label: 'Services' },
+  { href: '/owner/stats', label: 'Analytics' },
   { href: '/owner/settings', label: 'Settings' }
 ];
 

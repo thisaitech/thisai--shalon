@@ -18,43 +18,66 @@ async function getOwnerSalonId(req: NextRequest) {
 }
 
 // GET /api/owner/appointments?date=YYYY-MM-DD — owner: get appointments for a specific date
+// GET /api/owner/appointments?customerEmail=xxx — owner: get appointments for a specific customer
 export async function GET(req: NextRequest) {
   try {
     const salonId = await getOwnerSalonId(req);
     const db = getAdminDb();
     const { searchParams } = new URL(req.url);
     const date = searchParams.get('date');
+    const customerEmail = searchParams.get('customerEmail');
 
     let appointments;
-    if (date) {
+
+    if (customerEmail) {
+      // Filter by customer email for customer history
+      const snapshot = await db
+        .collection('appointments')
+        .where('salonId', '==', salonId)
+        .where('customerEmail', '==', customerEmail)
+        .orderBy('date', 'desc')
+        .orderBy('time', 'desc')
+        .get();
+      appointments = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    } else if (date) {
+      // Filter by date
       try {
         const snapshot = await db
           .collection('appointments')
           .where('salonId', '==', salonId)
           .where('date', '==', date)
+          .orderBy('time', 'asc')
           .get();
         appointments = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       } catch {
+        // Fallback if no composite index
         const snapshot = await db
           .collection('appointments')
           .where('salonId', '==', salonId)
           .get();
         appointments = snapshot.docs
           .map((doc) => ({ id: doc.id, ...doc.data() } as Record<string, unknown>))
-          .filter((d) => d.date === date);
+          .filter((d) => d.date === date)
+          .sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
       }
     } else {
+      // Get all appointments
       const snapshot = await db
         .collection('appointments')
         .where('salonId', '==', salonId)
+        .orderBy('date', 'desc')
+        .orderBy('time', 'desc')
         .get();
       appointments = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     }
 
-    // Sort by time
-    (appointments as Record<string, unknown>[]).sort((a, b) =>
-      String(a.time || '').localeCompare(String(b.time || ''))
-    );
+    // Sort by date and time (newest first for customer history)
+    if (!customerEmail) {
+      (appointments as Record<string, unknown>[]).sort((a, b) =>
+        String(b.date || '').localeCompare(String(a.date || '')) ||
+        String(b.time || '').localeCompare(String(a.time || ''))
+      );
+    }
 
     return NextResponse.json({ appointments });
   } catch (error) {

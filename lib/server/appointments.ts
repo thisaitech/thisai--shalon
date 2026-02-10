@@ -26,16 +26,6 @@ export type PaymentInfo =
       provider: 'manual';
     };
 
-function isIndexError(error: unknown) {
-  const err = error as { code?: unknown; message?: unknown };
-  const message = String(err?.message ?? '');
-  return (
-    err?.code === 9 || // FAILED_PRECONDITION (gRPC)
-    message.toLowerCase().includes('requires an index') ||
-    message.toLowerCase().includes('failed_precondition')
-  );
-}
-
 async function listActiveAppointmentsForSalonDate({
   salonId,
   date
@@ -45,36 +35,7 @@ async function listActiveAppointmentsForSalonDate({
 }) {
   const adminDb = getAdminDb();
 
-  // Fast path (may require composite indexes depending on project settings).
-  try {
-    const snapshot = await adminDb
-      .collection('appointments')
-      .where('salonId', '==', salonId)
-      .where('date', '==', date)
-      .where('status', 'in', ['pending', 'confirmed'])
-      .get();
-
-    return snapshot.docs.map((doc) => doc.data() as { time: string; duration: number; status?: string });
-  } catch (error) {
-    if (!isIndexError(error)) throw error;
-  }
-
-  // Fallback 1: remove the `in` filter and filter in memory.
-  try {
-    const snapshot = await adminDb
-      .collection('appointments')
-      .where('salonId', '==', salonId)
-      .where('date', '==', date)
-      .get();
-
-    return snapshot.docs
-      .map((doc) => doc.data() as { time: string; duration: number; status?: string })
-      .filter((item) => ['pending', 'confirmed'].includes(String(item.status ?? '')));
-  } catch (error) {
-    if (!isIndexError(error)) throw error;
-  }
-
-  // Fallback 2: query by salon only (no composite index needed), then filter.
+  // Query by salonId only (no composite index needed)
   const snapshot = await adminDb
     .collection('appointments')
     .where('salonId', '==', salonId)
@@ -107,8 +68,11 @@ export async function createAppointment({
   time,
   customerEmail,
   customerId,
+  customerName,
+  customerPhone,
   status = 'pending',
-  payment
+  payment,
+  notes
 }: {
   salonId: string;
   serviceId: string;
@@ -119,14 +83,17 @@ export async function createAppointment({
   time: string; // HH:mm
   customerEmail?: string | null;
   customerId?: string | null;
+  customerName?: string | null;
+  customerPhone?: string | null;
   status?: 'pending' | 'confirmed';
   payment?: PaymentInfo;
+  notes?: string | null;
 }) {
   const adminDb = getAdminDb();
 
-  const duration = Number(serviceDuration);
+  const duration = Math.max(1, Number(serviceDuration) || 30);
   const priceValue = price ? Number(price) : 0;
-  if (!salonId || !serviceId || !date || !time || !duration) {
+  if (!salonId || !serviceId || !date || !time) {
     throw new Error('Missing booking details');
   }
 
@@ -140,7 +107,11 @@ export async function createAppointment({
   }
 
   const existing = await listActiveAppointmentsForSalonDate({ salonId, date });
-  const hasOverlap = existing.some((item) => isOverlapping(time, duration, item.time, item.duration));
+  const durationNum = Math.max(1, Number(duration) || 30); // Default to 30 min, min 1
+  const hasOverlap = existing.some((item) => {
+    const existingDuration = Math.max(1, Number(item.duration) || 30);
+    return isOverlapping(time, durationNum, item.time, existingDuration);
+  });
 
   if (hasOverlap) {
     const conflict = new Error('Selected time is no longer available');
@@ -160,6 +131,9 @@ export async function createAppointment({
     payment: payment ?? null,
     customerEmail: customerEmail ?? null,
     customerId: customerId ?? null,
+    customerName: customerName ?? null,
+    customerPhone: customerPhone ?? null,
+    notes: notes ?? null,
     createdAt: new Date().toISOString()
   });
 

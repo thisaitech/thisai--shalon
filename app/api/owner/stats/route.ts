@@ -23,6 +23,8 @@ export async function GET(req: NextRequest) {
     const salonId = await getOwnerSalonId(req);
     const db = getAdminDb();
     const todayKey = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
 
     // Get today's appointments
     let todayAppointments;
@@ -34,7 +36,6 @@ export async function GET(req: NextRequest) {
         .get();
       todayAppointments = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
     } catch {
-      // Fallback if no composite index
       const snapshot = await db
         .collection('appointments')
         .where('salonId', '==', salonId)
@@ -44,6 +45,25 @@ export async function GET(req: NextRequest) {
         .filter((d) => d.date === todayKey);
     }
 
+    // Get this month's appointments for monthly stats
+    let monthlyAppointments;
+    try {
+      const snapshot = await db
+        .collection('appointments')
+        .where('salonId', '==', salonId)
+        .where('date', '>=', firstDayOfMonth)
+        .get();
+      monthlyAppointments = snapshot.docs.map((doc) => doc.data());
+    } catch {
+      const snapshot = await db
+        .collection('appointments')
+        .where('salonId', '==', salonId)
+        .get();
+      monthlyAppointments = snapshot.docs
+        .map((doc) => doc.data() as Record<string, unknown>)
+        .filter((d) => d.date && d.date >= firstDayOfMonth);
+    }
+
     // Get all appointments for this salon for stats
     const allSnapshot = await db
       .collection('appointments')
@@ -51,7 +71,7 @@ export async function GET(req: NextRequest) {
       .get();
     const allAppointments = allSnapshot.docs.map((doc) => doc.data());
 
-    // Calculate stats
+    // Calculate today's stats
     const todayCount = todayAppointments.length;
     const todayRevenue = todayAppointments.reduce(
       (sum: number, a: Record<string, unknown>) => sum + Number(a.price || 0), 0
@@ -61,6 +81,16 @@ export async function GET(req: NextRequest) {
           (sum: number, a: Record<string, unknown>) => sum + Number(a.duration || 0), 0
         ) / todayAppointments.length)
       : 0;
+
+    // Calculate monthly stats
+    const completedThisMonth = (monthlyAppointments as Record<string, unknown>[])
+      .filter((a) => a.status === 'completed').length;
+    const monthlyRevenue = (monthlyAppointments as Record<string, unknown>[])
+      .reduce((sum: number, a) => sum + Number(a.price || 0), 0);
+
+    // Calculate pending appointments
+    const pendingAppointments = (todayAppointments as Record<string, unknown>[])
+      .filter((a) => a.status === 'pending').length;
 
     // Calculate returning clients %
     const customerCounts = new Map<string, number>();
@@ -82,11 +112,24 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       stats: {
         todayAppointments: todayCount,
-        avgDuration: avgDuration ? `${avgDuration}m` : '0m',
         todayRevenue,
-        returningPct: `${returningPct}%`
+        avgDuration: avgDuration ? `${avgDuration}m` : '0m',
+        returningPct: `${returningPct}%`,
+        totalCustomers,
+        pendingAppointments,
+        completedThisMonth,
+        monthlyRevenue
       },
-      upcoming
+      upcoming: upcoming.map((a) => ({
+        id: a.id,
+        serviceName: a.serviceName,
+        time: a.time,
+        customerEmail: a.customerEmail,
+        customerPhone: a.customerPhone,
+        customerName: a.customerName,
+        status: a.status,
+        price: a.price
+      }))
     });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });

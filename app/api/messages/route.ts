@@ -17,70 +17,60 @@ async function getOwnerSalonId(req: NextRequest) {
   return snapshot.docs[0].id;
 }
 
-// POST /api/notifications — owner: send notification to client
+// POST /api/messages — owner: send a message to customer
 export async function POST(req: NextRequest) {
   try {
     await getOwnerSalonId(req);
     const db = getAdminDb();
     const body = await req.json();
     
-    const { appointmentId, type, customerEmail, customerPhone, customerName, serviceName, date, time, status } = body;
+    const { appointmentId, sender, text } = body;
     
-    if (!appointmentId || !type) {
+    if (!appointmentId || !sender || !text) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Create notification record
-    await db.collection('notifications').add({
+    const messageRef = await db.collection('messages').add({
       appointmentId,
-      type, // 'email' or 'sms'
-      recipientEmail: customerEmail,
-      recipientPhone: customerPhone,
-      customerName,
-      serviceName,
-      date,
-      time,
-      status,
-      sentAt: new Date().toISOString(),
-      read: false
+      sender, // 'owner' or 'customer'
+      text,
+      timestamp: new Date().toISOString(),
+      read: false,
+      createdAt: new Date().toISOString()
     });
 
-    // TODO: Integrate with actual SMS/Email service (Twilio, SendGrid, etc.)
-    // For now, we'll just log and return success
-    
-    console.log(`[Notification] ${type.toUpperCase()} sent for appointment ${appointmentId}`);
-    console.log(`  Customer: ${customerName || customerEmail}`);
-    console.log(`  Service: ${serviceName}`);
-    console.log(`  Date: ${date} at ${time}`);
-    console.log(`  Status: ${status}`);
+    // TODO: Send push notification to recipient
 
     return NextResponse.json({ 
       success: true, 
-      message: `${type} notification queued successfully`,
-      notificationId: appointmentId 
+      messageId: messageRef.id 
     });
   } catch (error) {
-    console.error('Notification error:', error);
+    console.error('Error creating message:', error);
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
 
-// GET /api/notifications — owner: get notification history
+// GET /api/messages?appointmentId=xxx — get messages for an appointment
 export async function GET(req: NextRequest) {
   try {
-    const salonId = await getOwnerSalonId(req);
-    const db = getAdminDb();
     const { searchParams } = new URL(req.url);
     const appointmentId = searchParams.get('appointmentId');
+    
+    if (!appointmentId) {
+      return NextResponse.json({ error: 'appointmentId is required' }, { status: 400 });
+    }
 
-    let query = db.collection('notifications')
+    const db = getAdminDb();
+    const snapshot = await db
+      .collection('messages')
       .where('appointmentId', '==', appointmentId)
-      .orderBy('sentAt', 'desc');
+      .orderBy('timestamp', 'asc')
+      .get();
 
-    const snapshot = await query.get();
-    const notifications = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const messages = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-    return NextResponse.json({ notifications });
+    return NextResponse.json({ messages });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }

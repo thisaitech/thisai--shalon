@@ -26,16 +26,29 @@ export async function GET(req: NextRequest) {
     const appointmentsSnapshot = await db
       .collection('appointments')
       .where('salonId', '==', salonId)
+      .orderBy('date', 'desc')
       .get();
 
     // Aggregate customer data from appointments
     const customerMap = new Map<string, {
       email: string;
       customerId: string | null;
+      customerPhone?: string;
+      customerName?: string;
       visits: number;
       lastDate: string;
       lastService: string;
       totalSpent: number;
+      firstDate: string;
+      averageSpend: number;
+      appointments: Array<{
+        id: string;
+        date: string;
+        time: string;
+        serviceName: string;
+        price: number;
+        status: string;
+      }>;
     }>();
 
     for (const doc of appointmentsSnapshot.docs) {
@@ -44,21 +57,41 @@ export async function GET(req: NextRequest) {
       if (key === 'anonymous') continue;
 
       const existing = customerMap.get(key);
+      const appointmentInfo = {
+        id: doc.id,
+        date: data.date || '',
+        time: data.time || '',
+        serviceName: data.serviceName || '',
+        price: Number(data.price || 0),
+        status: data.status || 'pending'
+      };
+
       if (existing) {
         existing.visits += 1;
         existing.totalSpent += Number(data.price || 0);
-        if (data.date > existing.lastDate) {
+        existing.averageSpend = existing.totalSpent / existing.visits;
+        existing.appointments.push(appointmentInfo);
+        
+        if (data.date && data.date > existing.lastDate) {
           existing.lastDate = data.date;
           existing.lastService = data.serviceName || '';
+        }
+        if (data.date && (!existing.firstDate || data.date < existing.firstDate)) {
+          existing.firstDate = data.date;
         }
       } else {
         customerMap.set(key, {
           email: data.customerEmail || '',
           customerId: data.customerId || null,
+          customerPhone: data.customerPhone,
+          customerName: data.customerName,
           visits: 1,
           lastDate: data.date || '',
           lastService: data.serviceName || '',
-          totalSpent: Number(data.price || 0)
+          totalSpent: Number(data.price || 0),
+          firstDate: data.date || '',
+          averageSpend: Number(data.price || 0),
+          appointments: [appointmentInfo]
         });
       }
     }

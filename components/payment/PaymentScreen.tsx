@@ -122,6 +122,9 @@ export default function PaymentScreen({
           time,
           customerEmail: contactEmail || userEmail || null,
           customerId: userId || null,
+          customerName: null,
+          customerPhone: null,
+          notes: null,
           paymentMethod,
           paymentReferenceId: paymentMethod === 'upi' ? upiRef : undefined
         })
@@ -221,7 +224,10 @@ export default function PaymentScreen({
                 date,
                 time,
                 customerEmail: contactEmail || userEmail || null,
-                customerId: userId || null
+                customerId: userId || null,
+                customerName: null,
+                customerPhone: null,
+                notes: null
               }
             })
           });
