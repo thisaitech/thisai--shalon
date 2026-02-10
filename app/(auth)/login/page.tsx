@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -45,35 +44,8 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[85vh] px-6 py-12 flex items-center justify-center">
-      <div className="max-w-5xl w-full grid gap-8 lg:grid-cols-[1.05fr_0.95fr] items-center">
-        <div className="card-surface p-8 space-y-4 animate-fade-up">
-          <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Welcome</p>
-          <h1 className="text-4xl font-display text-primary">Choose your login</h1>
-          <p className="text-sm text-charcoal/70">
-            Gender-neutral, studio-first booking. Pick your preferred way to sign in.
-          </p>
-          <div className="grid gap-3">
-            <button className="card-surface p-4 flex items-center justify-between text-sm font-medium">
-              Continue with email
-              <span className="text-primary">→</span>
-            </button>
-            <button className="card-surface p-4 flex items-center justify-between text-sm text-charcoal/50">
-              Passkey login (coming soon)
-              <span>✦</span>
-            </button>
-          </div>
-          <div className="relative h-44 w-full overflow-hidden rounded-2xl">
-            <Image
-              src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80"
-              alt="Salon interior"
-              fill
-              className="object-cover"
-              sizes="(max-width: 1024px) 100vw, 40vw"
-            />
-          </div>
-        </div>
-
-        <div className="glass rounded-2xl p-10 w-full max-w-md mx-auto animate-fade-up [animation-delay:120ms]">
+        <div className="max-w-md w-full mx-auto">
+          <div className="glass rounded-2xl p-10 w-full animate-fade-up">
           <h2 className="text-2xl font-display text-primary">Log in with email</h2>
           <p className="mt-2 text-sm text-charcoal/70">We’ll keep your appointments in sync.</p>
           {!auth || !db ? (

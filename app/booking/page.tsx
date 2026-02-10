@@ -36,9 +36,7 @@ export default function BookingPage({
           <div className="h-10 w-10" aria-hidden="true" />
         </header>
 
-        <div className="glass-panel rounded-[38px] p-6">
           <BookingFlow salon={salon} initialServiceId={searchParams?.service} />
-        </div>
       </CustomerContainer>
     </div>
   );
