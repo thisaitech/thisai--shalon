@@ -4,6 +4,7 @@ const items = [
   { href: '/owner', label: 'Dashboard' },
   { href: '/owner/calendar', label: 'Calendar' },
   { href: '/owner/customers', label: 'Customers' },
+  { href: '/owner/messages', label: 'Messages' },
   { href: '/owner/services', label: 'Services' },
   { href: '/owner/stats', label: 'Analytics' },
   { href: '/owner/settings', label: 'Settings' }

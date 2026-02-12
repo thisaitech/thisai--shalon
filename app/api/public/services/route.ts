@@ -1,5 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb } from '@/lib/firebase/admin';
+import { defaultBusinessHours } from '@/lib/utils';
+
+export const dynamic = 'force-dynamic';
+
+type RawService = {
+  id?: string;
+  name?: string;
+  description?: string;
+  price?: number | string;
+  duration?: number | string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+function normalizeService(item: RawService, fallbackId: string) {
+  return {
+    id: item.id || fallbackId,
+    name: item.name || 'Service',
+    description: item.description || '',
+    price: Number(item.price || 0),
+    duration: Number(item.duration || 30),
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt
+  };
+}
 
 // GET /api/public/services?salonId=xxx — public: get services for a salon (no auth required)
 export async function GET(req: NextRequest) {
@@ -18,7 +43,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Salon not found' }, { status: 404 });
     }
 
-    const salonData = salonDoc.data();
+    const salonData = salonDoc.data() || {};
 
     // Get services from subcollection
     const servicesSnapshot = await db
@@ -28,23 +53,24 @@ export async function GET(req: NextRequest) {
       .orderBy('createdAt', 'asc')
       .get();
 
-    let services = servicesSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-
-    // If no services in subcollection, fallback to salon doc's services array
-    if (services.length === 0 && salonData?.services && Array.isArray(salonData.services)) {
-      services = salonData.services;
-    }
+    let services = servicesSnapshot.docs.map((doc) =>
+      normalizeService(doc.data() as RawService, doc.id)
+    );
 
     return NextResponse.json({
       salon: {
         id: salonDoc.id,
-        name: salonData?.name,
-        location: salonData?.location,
-        phone: salonData?.phone,
-        businessHours: salonData?.businessHours
+        name: salonData?.name || 'Salon',
+        location: salonData?.location || 'Location unavailable',
+        phone: salonData?.phone || '',
+        image:
+          salonData?.image ||
+          salonData?.coverUrl ||
+          'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1600&q=80',
+        tags: Array.isArray(salonData?.tags) ? salonData.tags : [],
+        rating: Number(salonData?.rating || 4.8),
+        distance: typeof salonData?.distance === 'string' ? salonData.distance : '',
+        businessHours: salonData?.businessHours || defaultBusinessHours
       },
       services
     });

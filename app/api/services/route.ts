@@ -39,15 +39,6 @@ export async function GET(req: NextRequest) {
 
     const services = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 
-    // If no services in subcollection, fallback to salon doc's services array
-    if (services.length === 0) {
-      const salonDoc = await db.collection('salons').doc(salonId).get();
-      const salonData = salonDoc.data();
-      if (salonData?.services && Array.isArray(salonData.services)) {
-        return NextResponse.json({ services: salonData.services, salonId });
-      }
-    }
-
     return NextResponse.json({ services, salonId });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });

@@ -22,6 +22,7 @@ import { StepProgress } from '@/components/ui/progress';
 import { cn, formatCurrency, formatDate, formatTime } from '@/lib/utils';
 import type { Service } from '@/lib/data';
 import { auth } from '@/lib/firebase/client';
+import { buildApiUrl } from '@/lib/api/client';
 import { onAuthStateChanged } from 'firebase/auth';
 
 type PaymentMethod = 'razorpay' | 'upi' | 'cash';
@@ -109,7 +110,7 @@ export default function PaymentScreen({
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/appointments', {
+      const response = await fetch(buildApiUrl('/api/appointments'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -131,18 +132,28 @@ export default function PaymentScreen({
       });
 
       const text = await response.text();
+      let payload: { id?: string; error?: string } = {};
+      try {
+        payload = JSON.parse(text) as { id?: string; error?: string };
+      } catch {
+        payload = {};
+      }
+
       if (!response.ok) {
         let message = 'Unable to create booking';
-        try {
-          const data = JSON.parse(text) as { error?: string };
-          message = data.error || message;
-        } catch {
-          if (text) message = text;
-        }
+        if (payload.error) message = payload.error;
+        else if (text) message = text;
         throw new Error(message);
       }
 
-      window.location.href = `/booking-confirmation?status=pending&method=${paymentMethod}`;
+      const params = new URLSearchParams({
+        status: 'pending',
+        method: paymentMethod
+      });
+      if (payload.id) {
+        params.set('appointment', payload.id);
+      }
+      window.location.href = `/booking-confirmation?${params.toString()}`;
     } catch (err) {
       setError((err as Error).message || 'Payment failed.');
     } finally {
@@ -164,7 +175,7 @@ export default function PaymentScreen({
         throw new Error('Razorpay failed to load.');
       }
 
-      const orderRes = await fetch('/api/payments/razorpay/order', {
+      const orderRes = await fetch(buildApiUrl('/api/payments/razorpay/order'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -210,7 +221,7 @@ export default function PaymentScreen({
           razorpay_payment_id: string;
           razorpay_signature: string;
         }) => {
-          const verifyRes = await fetch('/api/payments/razorpay/verify', {
+          const verifyRes = await fetch(buildApiUrl('/api/payments/razorpay/verify'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -233,20 +244,30 @@ export default function PaymentScreen({
           });
 
           const verifyText = await verifyRes.text();
+          let verifyData: { id?: string; error?: string } = {};
+          try {
+            verifyData = JSON.parse(verifyText) as { id?: string; error?: string };
+          } catch {
+            verifyData = {};
+          }
+
           if (!verifyRes.ok) {
             let message = 'Payment verified, but booking failed.';
-            try {
-              const data = JSON.parse(verifyText) as { error?: string };
-              message = data.error || message;
-            } catch {
-              if (verifyText) message = verifyText;
-            }
+            if (verifyData.error) message = verifyData.error;
+            else if (verifyText) message = verifyText;
             setError(message);
             setLoading(false);
             return;
           }
 
-          window.location.href = '/booking-confirmation?status=confirmed&method=razorpay';
+          const params = new URLSearchParams({
+            status: 'confirmed',
+            method: 'razorpay'
+          });
+          if (verifyData.id) {
+            params.set('appointment', verifyData.id);
+          }
+          window.location.href = `/booking-confirmation?${params.toString()}`;
         },
         modal: {
           ondismiss: () => {

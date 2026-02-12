@@ -5,8 +5,24 @@
   "targets": {
     "thisai-salon": {
       "hosting": {
+        "customer": [
+          "thisai-salon-c783a"
+        ],
+        "owner": [
+          "thisai-salon-owner"
+        ],
         "thisai-salon-c783a": [
           "thisai-salon-c783a"
+        ]
+      }
+    },
+    "thisaishalon-app": {
+      "hosting": {
+        "customer": [
+          "thisaishalon-app-customer"
+        ],
+        "owner": [
+          "thisaishalon-app-owner"
         ]
       }
     }

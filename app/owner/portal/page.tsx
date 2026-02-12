@@ -7,7 +7,8 @@ import {
   MessageSquare, CreditCard, Bell, ChevronRight, TrendingUp 
 } from 'lucide-react';
 import { useOwnerAuth } from '@/lib/hooks/useOwnerAuth';
-import { formatCurrency } from '@/lib/utils';
+import { buildApiUrl } from '@/lib/api/client';
+import { formatCurrency, toDateKey } from '@/lib/utils';
 
 type QuickStat = {
   label: string;
@@ -25,8 +26,9 @@ export default function OwnerPortalPage() {
     if (authLoading || !user) return;
     const loadStats = async () => {
       try {
+        const todayKey = toDateKey(new Date());
         const token = await user.getIdToken();
-        const res = await fetch('/api/owner/stats', {
+        const res = await fetch(buildApiUrl(`/api/owner/stats?date=${todayKey}`), {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -34,16 +36,16 @@ export default function OwnerPortalPage() {
           const s = data.stats || {};
           setStats([
             { label: 'Today\'s Appointments', value: String(s.todayAppointments || 0), icon: 'Calendar', color: 'bg-blue-500' },
-            { label: 'Today\'s Revenue', value: formatCurrency(s.todayRevenue || 0), icon: 'DollarSign', color: 'bg-green-500' },
-            { label: 'Total Customers', value: String(s.totalCustomers || 0), icon: 'Users', color: 'bg-purple-500' },
+            { label: 'Owner Earnings', value: formatCurrency(s.ownerEarningsToday || s.ownerEarnings || 0), icon: 'DollarSign', color: 'bg-green-500' },
+            { label: 'Pending Appointments', value: String(s.pendingAppointments || 0), icon: 'Calendar', color: 'bg-amber-500' },
             { label: 'Monthly Revenue', value: formatCurrency(s.monthlyRevenue || 0), icon: 'TrendingUp', color: 'bg-orange-500' }
           ]);
         }
       } catch {
         setStats([
           { label: 'Today\'s Appointments', value: '0', icon: 'Calendar', color: 'bg-blue-500' },
-          { label: 'Today\'s Revenue', value: formatCurrency(0), icon: 'DollarSign', color: 'bg-green-500' },
-          { label: 'Total Customers', value: '0', icon: 'Users', color: 'bg-purple-500' },
+          { label: 'Owner Earnings', value: formatCurrency(0), icon: 'DollarSign', color: 'bg-green-500' },
+          { label: 'Pending Appointments', value: '0', icon: 'Calendar', color: 'bg-amber-500' },
           { label: 'Monthly Revenue', value: formatCurrency(0), icon: 'TrendingUp', color: 'bg-orange-500' }
         ]);
       } finally {

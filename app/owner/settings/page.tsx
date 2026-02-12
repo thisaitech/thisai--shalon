@@ -64,6 +64,8 @@ export default function OwnerSettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'details' | 'hours' | 'social' | 'premium'>('details');
 
   useEffect(() => {
@@ -104,15 +106,54 @@ export default function OwnerSettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     setSaved(false);
+    setSaveMessage(null);
+    setSaveError(null);
+
+    if (!salonInfo.name.trim() || !salonInfo.location.trim()) {
+      setSaveError('Salon name and location are required.');
+      setSaving(false);
+      return;
+    }
+
     try {
-      await fetchWithAuth('/api/owner', {
+      const res = await fetchWithAuth('/api/owner', {
         method: 'PUT',
         body: JSON.stringify({ ...salonInfo, businessHours: hours })
       });
+
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        created?: boolean;
+        salon?: Salon;
+      };
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to save studio details.');
+      }
+
+      if (data.salon) {
+        const nextSalon = { ...data.salon, id: data.salon.id || '' };
+        setSalon(nextSalon);
+        setSalonInfo({
+          name: nextSalon.name || '',
+          location: nextSalon.location || '',
+          ownerEmail: nextSalon.ownerEmail || user?.email || '',
+          phone: nextSalon.phone || '',
+          description: nextSalon.description || '',
+          website: nextSalon.website || '',
+          instagram: nextSalon.instagram || '',
+          facebook: nextSalon.facebook || ''
+        });
+        if (nextSalon.businessHours) {
+          setHours(nextSalon.businessHours);
+        }
+      }
+
       setSaved(true);
+      setSaveMessage(data.created ? 'Studio created successfully!' : 'Saved successfully!');
       setTimeout(() => setSaved(false), 3000);
-    } catch {
-      // ignore
+    } catch (error) {
+      setSaveError((error as Error).message || 'Failed to save studio details.');
     } finally {
       setSaving(false);
     }
@@ -129,8 +170,14 @@ export default function OwnerSettingsPage() {
     <div className="max-w-5xl mx-auto px-6 py-12 space-y-8">
       <div>
         <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Settings</p>
-        <h1 className="text-3xl font-display text-primary">Business Management</h1>
-        <p className="text-sm text-charcoal/60 mt-1">Manage your salon profile and settings</p>
+        <h1 className="text-3xl font-display text-primary">
+          {salon ? 'Business Management' : 'Create Your Studio'}
+        </h1>
+        <p className="text-sm text-charcoal/60 mt-1">
+          {salon
+            ? 'Manage your salon profile and settings'
+            : 'Set up your salon profile so customers can discover and book your studio.'}
+        </p>
       </div>
 
       <OwnerSubnav />
@@ -395,16 +442,17 @@ export default function OwnerSettingsPage() {
               ) : (
                 <>
                   <Save size={16} />
-                  Save Changes
+                  {salon ? 'Save Changes' : 'Create Studio'}
                 </>
               )}
             </Button>
             {saved && (
               <span className="flex items-center gap-2 text-green-600">
                 <Check size={16} />
-                Saved successfully!
+                {saveMessage || 'Saved successfully!'}
               </span>
             )}
+            {saveError && <span className="text-sm text-red-600">{saveError}</span>}
           </div>
         </>
       )}

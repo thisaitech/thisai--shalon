@@ -2,13 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { MessageCircle, Send, Sparkles } from 'lucide-react';
-import CustomerContainer from '@/components/layout/CustomerContainer';
+import { Send, User } from 'lucide-react';
+import OwnerSubnav from '@/components/layout/OwnerSubnav';
+import Skeleton from '@/components/ui/skeleton';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import Skeleton from '@/components/ui/skeleton';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useOwnerAuth } from '@/lib/hooks/useOwnerAuth';
 import { formatDate, toDateKey } from '@/lib/utils';
 
 type Thread = {
@@ -45,18 +44,8 @@ function formatThreadTime(value: string) {
   return formatDate(date);
 }
 
-function statusBadge(status: string) {
-  if (status === 'confirmed' || status === 'completed') return 'bg-green-100 text-green-700';
-  if (status === 'canceled') return 'bg-red-100 text-red-700';
-  if (status === 'delayed') return 'bg-orange-100 text-orange-700';
-  return 'bg-amber-100 text-amber-700';
-}
-
-export default function MessagesPage() {
-  const searchParams = useSearchParams();
-  const preferredAppointmentId = searchParams.get('appointment') || '';
-
-  const { user, loading: authLoading, fetchWithAuth } = useAuth();
+export default function OwnerMessagesPage() {
+  const { user, loading: authLoading, fetchWithAuth } = useOwnerAuth();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [threadsLoading, setThreadsLoading] = useState(true);
   const [threadsError, setThreadsError] = useState<string | null>(null);
@@ -69,7 +58,6 @@ export default function MessagesPage() {
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
-
   const endRef = useRef<HTMLDivElement | null>(null);
 
   const activeThread = useMemo(
@@ -95,7 +83,7 @@ export default function MessagesPage() {
     const loadThreads = async (showLoading = false) => {
       if (showLoading) setThreadsLoading(true);
       try {
-        const res = await fetchWithAuth('/api/messages?mode=threads&role=customer');
+        const res = await fetchWithAuth('/api/messages?mode=threads&role=owner');
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
           threads?: Thread[];
@@ -104,25 +92,14 @@ export default function MessagesPage() {
           throw new Error(data.error || 'Unable to load conversations');
         }
         if (cancelled) return;
-
-        const nextThreads = Array.isArray(data.threads) ? data.threads : [];
-        setThreads(nextThreads);
+        const next = Array.isArray(data.threads) ? data.threads : [];
+        setThreads(next);
         setThreadsError(null);
-
         setActiveAppointmentId((current) => {
-          if (
-            preferredAppointmentId &&
-            nextThreads.some((thread) => thread.appointmentId === preferredAppointmentId)
-          ) {
-            return preferredAppointmentId;
-          }
-          if (
-            current &&
-            nextThreads.some((thread) => thread.appointmentId === current)
-          ) {
+          if (current && next.some((thread) => thread.appointmentId === current)) {
             return current;
           }
-          return nextThreads[0]?.appointmentId || '';
+          return next[0]?.appointmentId || '';
         });
       } catch (error) {
         if (cancelled) return;
@@ -141,7 +118,7 @@ export default function MessagesPage() {
       cancelled = true;
       clearInterval(intervalId);
     };
-  }, [authLoading, fetchWithAuth, preferredAppointmentId, user]);
+  }, [authLoading, fetchWithAuth, user]);
 
   useEffect(() => {
     if (!activeAppointmentId || !user) {
@@ -156,7 +133,7 @@ export default function MessagesPage() {
       if (showLoading) setMessagesLoading(true);
       try {
         const res = await fetchWithAuth(
-          `/api/messages?appointmentId=${encodeURIComponent(activeAppointmentId)}&role=customer`
+          `/api/messages?appointmentId=${encodeURIComponent(activeAppointmentId)}&role=owner`
         );
         const data = (await res.json().catch(() => ({}))) as {
           error?: string;
@@ -190,7 +167,6 @@ export default function MessagesPage() {
   const sendMessage = async () => {
     const text = draft.trim();
     if (!activeThread || !text || sending) return;
-
     setSending(true);
     setSendError(null);
     setDraft('');
@@ -203,16 +179,13 @@ export default function MessagesPage() {
           text
         })
       });
-
       const data = (await res.json().catch(() => ({}))) as {
         error?: string;
         message?: ChatMessage;
       };
-
       if (!res.ok) {
         throw new Error(data.error || 'Unable to send message');
       }
-
       if (data.message) {
         setMessages((prev) => [...prev, data.message as ChatMessage]);
       }
@@ -226,138 +199,108 @@ export default function MessagesPage() {
 
   if (authLoading || threadsLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-12 space-y-4">
-        <Skeleton className="h-8 w-52" />
+      <div className="max-w-5xl mx-auto px-6 py-12 space-y-4">
+        <Skeleton className="h-10 w-56" />
         <Skeleton className="h-24" />
-        <Skeleton className="h-64" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-6">
-        <div className="text-center">
-          <MessageCircle size={48} className="mx-auto text-charcoal/30 mb-4" />
-          <h1 className="text-2xl font-display text-primary mb-2">Messages</h1>
-          <p className="text-charcoal/60 mb-5">Login to chat with salon owner.</p>
-          <Link href="/login" className="pill bg-primary text-white">
-            Go to Login
-          </Link>
-        </div>
+        <Skeleton className="h-80" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pb-32">
-      <CustomerContainer className="pt-7 space-y-5">
-        <header className="space-y-1">
-          <p className="text-xs text-charcoal/60">Messages</p>
-          <h1 className="text-2xl font-semibold text-ink">Message your salon</h1>
-          <p className="text-sm text-charcoal/70">
-            Chat with owner about pending and confirmed appointments.
-          </p>
-        </header>
+    <div className="max-w-5xl mx-auto px-6 py-12 space-y-8">
+      <div>
+        <p className="text-xs uppercase tracking-[0.35em] text-primary/70">Messages</p>
+        <h1 className="text-3xl font-display text-primary">Customer Conversations</h1>
+      </div>
 
-        {threadsError ? (
-          <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
-            {threadsError}
-          </div>
-        ) : null}
+      <OwnerSubnav />
 
-        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-4 space-y-3">
-          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
-            {threads.length === 0 ? (
-              <div className="rounded-2xl bg-secondary/80 border border-white/70 p-4 text-sm text-charcoal/70 min-w-full">
-                No conversations yet. Book a service first to start chatting.
-              </div>
-            ) : (
-              threads.map((thread) => (
-                <button
-                  key={thread.appointmentId}
-                  type="button"
-                  onClick={() => setActiveAppointmentId(thread.appointmentId)}
-                  className={
-                    thread.appointmentId === activeAppointmentId
-                      ? 'shrink-0 rounded-2xl bg-primary text-white px-4 py-3 text-left shadow-glow min-w-[230px]'
-                      : 'shrink-0 rounded-2xl bg-white/95 border border-white/70 px-4 py-3 text-left shadow-soft min-w-[230px]'
-                  }
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold truncate">{thread.salonName}</p>
-                    <span
-                      className={
-                        thread.appointmentId === activeAppointmentId
-                          ? 'text-xs text-white/70'
-                          : 'text-xs text-charcoal/50'
-                      }
-                    >
-                      {formatThreadTime(thread.lastMessageAt)}
-                    </span>
-                  </div>
-                  <p
-                    className={
-                      thread.appointmentId === activeAppointmentId
-                        ? 'text-xs text-white/80 mt-1 truncate'
-                        : 'text-xs text-charcoal/60 mt-1 truncate'
-                    }
-                  >
-                    {thread.lastMessageText || `${thread.serviceName} · ${thread.date}`}
+      {threadsError ? (
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
+          {threadsError}
+        </div>
+      ) : null}
+
+      <div className="glass rounded-2xl p-4 space-y-4">
+        <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+          {threads.length === 0 ? (
+            <div className="rounded-xl bg-white/80 border border-white/70 p-4 text-sm text-charcoal/60 min-w-full">
+              No message conversations yet.
+            </div>
+          ) : (
+            threads.map((thread) => (
+              <button
+                key={thread.appointmentId}
+                type="button"
+                onClick={() => setActiveAppointmentId(thread.appointmentId)}
+                className={
+                  thread.appointmentId === activeAppointmentId
+                    ? 'shrink-0 rounded-2xl bg-primary text-white px-4 py-3 text-left shadow-glow min-w-[250px]'
+                    : 'shrink-0 rounded-2xl bg-white/95 border border-white/70 px-4 py-3 text-left shadow-soft min-w-[250px]'
+                }
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-semibold truncate">
+                    {thread.customerName || thread.customerEmail || 'Customer'}
                   </p>
-                </button>
-              ))
-            )}
-          </div>
-
-          <div className="rounded-2xl bg-secondary/80 border border-white/70 p-3 text-xs text-charcoal/70 flex items-center gap-2">
-            <Sparkles size={14} className="text-primary" />
-            Owner replies will appear here in real-time refresh.
-          </div>
+                  <span className="text-xs opacity-80">{formatThreadTime(thread.lastMessageAt)}</span>
+                </div>
+                <p className="text-xs mt-1 truncate opacity-90">
+                  {thread.lastMessageText || `${thread.serviceName} · ${thread.date}`}
+                </p>
+              </button>
+            ))
+          )}
         </div>
 
-        <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-5 space-y-4">
+        <div className="rounded-xl bg-white/80 border border-white/70 p-4 space-y-4">
           {activeThread ? (
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="h-10 w-10 rounded-2xl bg-primary/10 text-primary shadow-soft flex items-center justify-center">
-                  <MessageCircle size={18} />
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="h-9 w-9 rounded-xl bg-primary/10 text-primary grid place-items-center">
+                  <User size={16} />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-ink truncate">{activeThread.salonName}</p>
+                  <p className="text-sm font-medium text-primary truncate">
+                    {activeThread.customerName || activeThread.customerEmail || 'Customer'}
+                  </p>
                   <p className="text-xs text-charcoal/60 truncate">
                     {activeThread.serviceName} · {activeThread.date} {activeThread.time}
                   </p>
                 </div>
               </div>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusBadge(activeThread.status)}`}>
-                {activeThread.status}
-              </span>
+              <Link
+                href={`/owner/appointments/${activeThread.appointmentId}`}
+                className="pill bg-primary text-white"
+              >
+                Open Appointment
+              </Link>
             </div>
           ) : (
-            <div className="text-sm text-charcoal/60">Select a conversation to start messaging.</div>
+            <p className="text-sm text-charcoal/60">Select a conversation.</p>
           )}
 
-          <div className="card-surface p-4 space-y-3 max-h-72 overflow-y-auto">
+          <div className="space-y-3 max-h-80 overflow-y-auto">
             {messagesLoading ? (
               <p className="text-sm text-charcoal/60 text-center py-4">Loading messages...</p>
             ) : messagesError ? (
               <p className="text-sm text-red-700 text-center py-4">{messagesError}</p>
             ) : !activeThread ? (
-              <p className="text-sm text-charcoal/60 text-center py-4">No active thread selected.</p>
+              <p className="text-sm text-charcoal/60 text-center py-4">No conversation selected.</p>
             ) : messages.length === 0 ? (
               <p className="text-sm text-charcoal/60 text-center py-4">No messages yet.</p>
             ) : (
               messages.map((message) => (
                 <div
                   key={message.id}
-                  className={message.sender === 'customer' ? 'ml-auto max-w-[85%]' : 'max-w-[85%]'}
+                  className={message.sender === 'owner' ? 'ml-auto max-w-[85%]' : 'max-w-[85%]'}
                 >
                   <div
                     className={
-                      message.sender === 'customer'
-                        ? 'rounded-2xl px-4 py-3 text-sm bg-primary text-white shadow-soft'
-                        : 'rounded-2xl px-4 py-3 text-sm bg-white/95 border border-white/70 shadow-soft'
+                      message.sender === 'owner'
+                        ? 'rounded-2xl px-4 py-3 text-sm bg-primary text-white'
+                        : 'rounded-2xl px-4 py-3 text-sm bg-secondary/70 text-primary'
                     }
                   >
                     {message.text}
@@ -375,12 +318,12 @@ export default function MessagesPage() {
           </div>
 
           {sendError ? (
-            <div className="rounded-2xl border border-red-100 bg-red-50 p-3 text-sm text-red-700">
+            <div className="rounded-xl border border-red-100 bg-red-50 p-3 text-sm text-red-700">
               {sendError}
             </div>
           ) : null}
 
-          <div className="flex flex-col gap-3">
+          <div className="flex gap-2">
             <Input
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
@@ -390,19 +333,19 @@ export default function MessagesPage() {
                   sendMessage();
                 }
               }}
-              placeholder={activeThread ? 'Send a message...' : 'Select a conversation first'}
               disabled={!activeThread || sending}
+              placeholder={activeThread ? 'Type message for customer...' : 'Select conversation'}
             />
             <Button
               onClick={sendMessage}
-              className="w-full"
+              className="flex items-center gap-2"
               disabled={!activeThread || !draft.trim() || sending}
             >
-              {sending ? 'Sending...' : 'Send message'} <Send size={16} />
+              {sending ? 'Sending...' : 'Send'} <Send size={16} />
             </Button>
           </div>
         </div>
-      </CustomerContainer>
+      </div>
     </div>
   );
 }

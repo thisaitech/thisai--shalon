@@ -6,7 +6,7 @@ import OwnerSubnav from '@/components/layout/OwnerSubnav';
 import Skeleton from '@/components/ui/skeleton';
 import Button from '@/components/ui/button';
 import { useOwnerAuth } from '@/lib/hooks/useOwnerAuth';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency, formatDate, toDateKey } from '@/lib/utils';
 
 type PeriodStats = {
   appointments: number;
@@ -36,7 +36,8 @@ export default function OwnerStatsPage() {
     if (authLoading || !user) return;
     const load = async () => {
       try {
-        const res = await fetchWithAuth('/api/owner/stats');
+        const todayKey = toDateKey(new Date());
+        const res = await fetchWithAuth(`/api/owner/stats?date=${todayKey}`);
         if (res.ok) {
           const data = await res.json();
           

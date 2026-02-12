@@ -10,11 +10,15 @@ const tabs = ['Services', 'Package', 'Specialist', 'Portfolio', 'Shop'] as const
 
 export default function SalonDetailTabs({
   salonId,
+  salonName,
+  salonLocation,
   salonImage,
   salonRating,
   services
 }: {
   salonId: string;
+  salonName: string;
+  salonLocation: string;
   salonImage: string;
   salonRating: number;
   services: Service[];
@@ -39,18 +43,26 @@ export default function SalonDetailTabs({
 
       <Tab.Panels className="pt-4">
         <Tab.Panel>
-          <div className="grid grid-cols-2 gap-4">
-            {services.map((service) => (
-              <ServiceCard
-                key={service.id}
-                salonId={salonId}
-                service={service}
-                image={serviceImages[service.id] ?? salonImage}
-                rating={salonRating}
-                reviewsLabel="1.2k"
-              />
-            ))}
-          </div>
+          {services.length === 0 ? (
+            <div className="rounded-3xl bg-white/92 shadow-soft border border-white/70 p-6 text-sm text-charcoal/70">
+              No owner-added services available for this salon yet.
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              {services.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  salonId={salonId}
+                  salonName={salonName}
+                  salonLocation={salonLocation}
+                  service={service}
+                  image={serviceImages[service.id] ?? salonImage}
+                  rating={salonRating}
+                  reviewsLabel="1.2k"
+                />
+              ))}
+            </div>
+          )}
         </Tab.Panel>
 
         {tabs.slice(1).map((tab) => (
@@ -64,4 +76,3 @@ export default function SalonDetailTabs({
     </Tab.Group>
   );
 }
-

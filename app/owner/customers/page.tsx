@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Search, Phone, Calendar, DollarSign, User, ChevronDown, ChevronUp } from 'lucide-react';
 import OwnerSubnav from '@/components/layout/OwnerSubnav';
 import Skeleton from '@/components/ui/skeleton';
@@ -237,6 +238,12 @@ export default function OwnerCustomersPage() {
                                 {appointment.status}
                               </span>
                               <span className="text-sm font-medium">{formatCurrency(appointment.price)}</span>
+                              <Link
+                                href={`/owner/appointments/${appointment.id}`}
+                                className="text-xs text-primary hover:underline"
+                              >
+                                Open
+                              </Link>
                             </div>
                           </div>
                         ))}

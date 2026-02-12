@@ -8,7 +8,7 @@ import Badge from '@/components/ui/badge';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import { useOwnerAuth } from '@/lib/hooks/useOwnerAuth';
-import { formatTime, formatDate } from '@/lib/utils';
+import { formatTime, formatDate, toDateKey } from '@/lib/utils';
 
 type Appointment = {
   id: string;
@@ -18,6 +18,7 @@ type Appointment = {
   customerEmail?: string;
   customerPhone?: string;
   customerName?: string;
+  customerId?: string;
   status: string;
   duration?: number;
   price?: number;
@@ -34,10 +35,6 @@ function getDaysInMonth(year: number, month: number) {
 function getFirstDayOfMonth(year: number, month: number) {
   const d = new Date(year, month, 1).getDay();
   return d === 0 ? 6 : d - 1; // Monday-start
-}
-
-function toDateKey(d: Date) {
-  return d.toISOString().slice(0, 10);
 }
 
 function isSameDay(a: Date, b: Date) {
@@ -109,6 +106,7 @@ export default function OwnerCalendarPage() {
         body: JSON.stringify({
           appointmentId,
           type,
+          customerId: appointment.customerId,
           customerEmail: appointment.customerEmail,
           customerPhone: appointment.customerPhone,
           customerName: appointment.customerName,

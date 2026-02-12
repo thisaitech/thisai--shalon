@@ -3,10 +3,20 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Clock, Star, CheckCircle2, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ArrowLeft,
+  Clock,
+  Star,
+  CheckCircle2,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  Heart
+} from 'lucide-react';
 import AvailabilityGrid from '@/components/salon/AvailabilityGrid';
 import Button from '@/components/ui/button';
 import Spinner from '@/components/ui/spinner';
+import { buildApiUrl } from '@/lib/api/client';
 import { formatCurrency, formatDate, formatTime, toDateKey } from '@/lib/utils';
 import { auth } from '@/lib/firebase/client';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -22,6 +32,23 @@ function getDaysInMonth(year: number, month: number) {
 
 function getFirstDayOfMonth(year: number, month: number) {
   return new Date(year, month, 1).getDay();
+}
+
+function hashString(value: string) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function getVisualMeta(serviceId: string) {
+  const seed = hashString(serviceId);
+  return {
+    discount: (seed % 15) + 10, // 10-24
+    ratingDecimal: (seed % 5) + 5, // 5-9 => 4.5-4.9
+    reviewCount: (seed % 300) + 100 // 100-399
+  };
 }
 
 function InlineCalendar({
@@ -145,12 +172,15 @@ export default function BookingFlow({
   const [error, setError] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [savingWishlistId, setSavingWishlistId] = useState<string | null>(null);
+  const [savedWishlistIds, setSavedWishlistIds] = useState<Record<string, boolean>>({});
+  const [wishlistError, setWishlistError] = useState<string | null>(null);
 
   // Fetch services from API (Firestore) with fallback to static data
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const res = await fetch(`/api/services?salonId=${salon.id}`);
+        const res = await fetch(buildApiUrl(`/api/services?salonId=${salon.id}`));
         if (res.ok) {
           const data = await res.json();
           if (data.services && data.services.length > 0) {
@@ -194,7 +224,7 @@ export default function BookingFlow({
       try {
         const dateKey = toDateKey(selectedDate);
         const response = await fetch(
-          `/api/appointments?salonId=${salon.id}&date=${dateKey}`,
+          buildApiUrl(`/api/appointments?salonId=${salon.id}&date=${dateKey}`),
           { signal: controller.signal }
         );
         if (!response.ok) {
@@ -229,6 +259,53 @@ export default function BookingFlow({
       service: selectedService.name
     };
   }, [selectedDate, selectedService, selectedTime]);
+
+  const addToWishlist = async (service: Service) => {
+    if (savingWishlistId === service.id) return;
+    const wishlistKey = `${salon.id}:${service.id}`;
+    if (savedWishlistIds[wishlistKey]) return;
+
+    if (!auth?.currentUser || !userId) {
+      const redirect = `${window.location.pathname}${window.location.search}`;
+      window.location.href = `/login?redirect=${encodeURIComponent(redirect)}`;
+      return;
+    }
+
+    setSavingWishlistId(service.id);
+    setWishlistError(null);
+
+    try {
+      const token = await auth.currentUser.getIdToken();
+      const response = await fetch(buildApiUrl('/api/wishlist'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          salonId: salon.id,
+          salonName: salon.name,
+          salonLocation: salon.location,
+          salonRating: salon.rating,
+          serviceId: service.id,
+          serviceName: service.name,
+          servicePrice: service.price,
+          serviceDuration: service.duration
+        })
+      });
+
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
+      if (!response.ok) {
+        throw new Error(payload.error || 'Unable to save service');
+      }
+
+      setSavedWishlistIds((current) => ({ ...current, [wishlistKey]: true }));
+    } catch (err) {
+      setWishlistError((err as Error).message || 'Unable to save service');
+    } finally {
+      setSavingWishlistId(null);
+    }
+  };
 
   const continueToPayment = async () => {
     if (!selectedService || !selectedDate || !selectedTime) return;
@@ -279,85 +356,125 @@ export default function BookingFlow({
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          {services.map((service) => {
-            const img = serviceImages[service.id] ?? salon.image;
-            const isSelected = selectedService?.id === service.id;
-            const discount = Math.floor(Math.random() * 15) + 10; // Visual only
+        {services.length === 0 ? (
+          <div className="rounded-2xl border border-white/70 bg-white/80 p-6 text-center text-sm text-charcoal/60">
+            Owner has not added services for this salon yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {services.map((service) => {
+              const img = serviceImages[service.id] ?? salon.image;
+              const isSelected = selectedService?.id === service.id;
+              const visuals = getVisualMeta(service.id);
+              const wishlistKey = `${salon.id}:${service.id}`;
+              const saved = Boolean(savedWishlistIds[wishlistKey]);
+              const saving = savingWishlistId === service.id;
 
-            return (
-              <button
-                key={service.id}
-                type="button"
-                onClick={() => {
-                  setSelectedService(service);
-                  setStep(2);
-                }}
-                className={`
-                  group relative text-left rounded-2xl overflow-hidden bg-white border transition-all
-                  hover:-translate-y-0.5 hover:shadow-glow focus-ring active:scale-[0.98]
-                  ${isSelected ? 'border-primary/40 shadow-glow ring-2 ring-primary/15' : 'border-white/70 shadow-soft'}
-                `}
-              >
-                {/* Image */}
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <Image
-                    src={img}
-                    alt={service.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 768px) 50vw, 220px"
-                  />
-                  {/* Discount badge */}
-                  <span className="absolute top-2 left-2 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
-                    {discount}%
-                  </span>
-                  {/* Duration badge */}
-                  <span className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-charcoal/80 text-[10px] font-medium px-2 py-1 rounded-lg flex items-center gap-1">
-                    <Clock size={10} />
-                    {service.duration}m
-                  </span>
-                  {isSelected && (
-                    <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                      <CheckCircle2 size={28} className="text-white drop-shadow-lg" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="p-3 space-y-1.5">
-                  <p className="text-[10px] uppercase tracking-wider text-charcoal/50 font-medium">
-                    {service.description.split(',')[0]}
-                  </p>
-                  <p className="text-sm font-semibold text-ink leading-tight line-clamp-2 min-h-[36px]">
-                    {service.name}
-                  </p>
-
-                  {/* Rating */}
-                  <div className="flex items-center gap-1">
-                    <Star size={12} className="text-yellow-400 fill-yellow-400" />
-                    <span className="text-xs text-charcoal/70 font-medium">4.{Math.floor(Math.random() * 5) + 5}</span>
-                    <span className="text-[10px] text-charcoal/40">({Math.floor(Math.random() * 300) + 100})</span>
-                  </div>
-
-                  {/* Price */}
-                  <div className="flex items-center justify-between pt-1">
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-base font-bold text-primary">
-                        {formatCurrency(service.price)}
-                      </span>
-                    </div>
-                    <span className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <path d="M12 5v14M5 12h14" />
-                      </svg>
+              return (
+                <article
+                  key={service.id}
+                  onClick={() => {
+                    setSelectedService(service);
+                    setStep(2);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      setSelectedService(service);
+                      setStep(2);
+                    }
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  className={`
+                    group relative cursor-pointer text-left rounded-2xl overflow-hidden bg-white border transition-all
+                    hover:-translate-y-0.5 hover:shadow-glow focus-ring active:scale-[0.98]
+                    ${isSelected ? 'border-primary/40 shadow-glow ring-2 ring-primary/15' : 'border-white/70 shadow-soft'}
+                  `}
+                >
+                  {/* Image */}
+                  <div className="relative aspect-[4/3] overflow-hidden">
+                    <Image
+                      src={img}
+                      alt={service.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      sizes="(max-width: 768px) 50vw, 220px"
+                    />
+                    {/* Discount badge */}
+                    <span className="absolute top-2 left-2 bg-primary text-white text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
+                      {visuals.discount}%
                     </span>
+                    {/* Duration badge */}
+                    <span className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm text-charcoal/80 text-[10px] font-medium px-2 py-1 rounded-lg flex items-center gap-1">
+                      <Clock size={10} />
+                      {service.duration}m
+                    </span>
+                    {isSelected && (
+                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
+                        <CheckCircle2 size={28} className="text-white drop-shadow-lg" />
+                      </div>
+                    )}
                   </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+
+                  {/* Info */}
+                  <div className="p-3 space-y-1.5">
+                    <p className="text-[10px] uppercase tracking-wider text-charcoal/50 font-medium">
+                      {service.description.split(',')[0]}
+                    </p>
+                    <p className="text-sm font-semibold text-ink leading-tight line-clamp-2 min-h-[36px]">
+                      {service.name}
+                    </p>
+
+                    {/* Rating */}
+                    <div className="flex items-center gap-1">
+                      <Star size={12} className="text-yellow-400 fill-yellow-400" />
+                      <span className="text-xs text-charcoal/70 font-medium">4.{visuals.ratingDecimal}</span>
+                      <span className="text-[10px] text-charcoal/40">({visuals.reviewCount})</span>
+                    </div>
+
+                    {/* Price */}
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-base font-bold text-primary">
+                          {formatCurrency(service.price)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void addToWishlist(service);
+                          }}
+                          disabled={saving || saved}
+                          aria-label={saved ? 'Saved to wishlist' : `Save ${service.name} to wishlist`}
+                          className={`
+                            h-8 w-8 rounded-xl border flex items-center justify-center transition-all
+                            ${
+                              saved
+                                ? 'bg-primary/10 border-primary/20 text-primary'
+                                : 'bg-white border-white/70 text-primary hover:bg-primary hover:text-white'
+                            }
+                            ${saving ? 'opacity-70 cursor-not-allowed' : ''}
+                          `}
+                        >
+                          <Heart size={14} className={saved ? 'fill-current' : ''} />
+                        </button>
+                        <span className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <path d="M12 5v14M5 12h14" />
+                          </svg>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+        {wishlistError ? <p className="text-sm text-red-600">{wishlistError}</p> : null}
       </div>
     );
   }

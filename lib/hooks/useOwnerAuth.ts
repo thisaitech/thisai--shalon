@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
+import { buildApiUrl } from '@/lib/api/client';
 
 export function useOwnerAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -29,9 +30,15 @@ export function useOwnerAuth() {
   const fetchWithAuth = useCallback(
     async (url: string, options?: RequestInit) => {
       const headers = await getAuthHeaders();
-      return fetch(url, {
+      const allHeaders = new Headers(options?.headers);
+      Object.entries(headers).forEach(([key, value]) => allHeaders.set(key, value));
+      if (!allHeaders.has('Content-Type')) {
+        allHeaders.set('Content-Type', 'application/json');
+      }
+
+      return fetch(buildApiUrl(url), {
         ...options,
-        headers: { ...headers, 'Content-Type': 'application/json', ...(options?.headers || {}) }
+        headers: allHeaders
       });
     },
     [getAuthHeaders]

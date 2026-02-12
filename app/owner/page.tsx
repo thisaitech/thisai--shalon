@@ -8,7 +8,7 @@ import {
   CheckCircle, XCircle, AlertCircle, DollarSign, Activity
 } from 'lucide-react';
 import { useOwnerAuth } from '@/lib/hooks/useOwnerAuth';
-import { formatCurrency, formatTime } from '@/lib/utils';
+import { formatCurrency, formatTime, toDateKey } from '@/lib/utils';
 import OwnerSubnav from '@/components/layout/OwnerSubnav';
 import Skeleton from '@/components/ui/skeleton';
 import Button from '@/components/ui/button';
@@ -55,19 +55,20 @@ export default function EnhancedOwnerDashboard() {
     
     const loadDashboardData = async () => {
       try {
-        const statsRes = await fetchWithAuth('/api/owner/stats');
+        const todayKey = toDateKey(new Date());
+
+        const statsRes = await fetchWithAuth(`/api/owner/stats?date=${todayKey}`);
         if (statsRes.ok) {
           const statsData = await statsRes.json();
           const s = statsData.stats || {};
           setStats([
             { label: "Today's Appointments", value: String(s.todayAppointments || 0), icon: 'Calendar', color: 'bg-blue-500', change: '+12%', changeType: 'up' },
-            { label: "Today's Revenue", value: formatCurrency(s.todayRevenue || 0), icon: 'DollarSign', color: 'bg-green-500', change: '+8%', changeType: 'up' },
-            { label: 'Pending Confirmations', value: String(s.pendingAppointments || 0), icon: 'AlertCircle', color: 'bg-amber-500', change: '-5%', changeType: 'down' },
+            { label: "Owner Earnings", value: formatCurrency(s.ownerEarningsToday || s.ownerEarnings || 0), icon: 'DollarSign', color: 'bg-green-500', change: '+8%', changeType: 'up' },
+            { label: 'Pending Appointments', value: String(s.pendingAppointments || 0), icon: 'AlertCircle', color: 'bg-amber-500', change: '-5%', changeType: 'down' },
             { label: 'Total Customers', value: String(s.totalCustomers || 0), icon: 'Users', color: 'bg-purple-500', change: '+15%', changeType: 'up' }
           ]);
         }
 
-        const todayKey = new Date().toISOString().slice(0, 10);
         const appointmentsRes = await fetchWithAuth(`/api/owner/appointments?date=${todayKey}`);
         if (appointmentsRes.ok) {
           const aptData = await appointmentsRes.json();
@@ -81,23 +82,13 @@ export default function EnhancedOwnerDashboard() {
         }
       } catch {
         setStats([
-          { label: "Today's Appointments", value: '8', icon: 'Calendar', color: 'bg-blue-500', change: '+12%', changeType: 'up' },
-          { label: "Today's Revenue", value: formatCurrency(4500), icon: 'DollarSign', color: 'bg-green-500', change: '+8%', changeType: 'up' },
-          { label: 'Pending Confirmations', value: '3', icon: 'AlertCircle', color: 'bg-amber-500', change: '-5%', changeType: 'down' },
-          { label: 'Total Customers', value: '156', icon: 'Users', color: 'bg-purple-500', change: '+15%', changeType: 'up' }
+          { label: "Today's Appointments", value: '0', icon: 'Calendar', color: 'bg-blue-500', change: '0%', changeType: 'neutral' },
+          { label: "Owner Earnings", value: formatCurrency(0), icon: 'DollarSign', color: 'bg-green-500', change: '0%', changeType: 'neutral' },
+          { label: 'Pending Appointments', value: '0', icon: 'AlertCircle', color: 'bg-amber-500', change: '0%', changeType: 'neutral' },
+          { label: 'Total Customers', value: '0', icon: 'Users', color: 'bg-purple-500', change: '0%', changeType: 'neutral' }
         ]);
-        setTodayAppointments([
-          { id: '1', serviceName: 'Haircut & Styling', time: '10:00', customerName: 'John Doe', status: 'confirmed', price: 500 },
-          { id: '2', serviceName: 'Full Body Massage', time: '11:00', customerName: 'Jane Smith', status: 'pending', price: 1200 },
-          { id: '3', serviceName: 'Facial Treatment', time: '12:00', customerName: 'Mike Johnson', status: 'confirmed', price: 800 },
-          { id: '4', serviceName: 'Manicure', time: '14:00', customerName: 'Sarah Wilson', status: 'pending', price: 350 },
-          { id: '5', serviceName: 'Hair Coloring', time: '15:00', customerName: 'Emily Brown', status: 'confirmed', price: 2500 }
-        ]);
-        setNotifications([
-          { id: '1', type: 'booking', title: 'New Booking', message: 'John Doe booked Haircut & Styling', read: false, createdAt: new Date().toISOString() },
-          { id: '2', type: 'payment', title: 'Payment Received', message: 'Received ₹500 from Jane Smith', read: false, createdAt: new Date(Date.now() - 3600000).toISOString() },
-          { id: '3', type: 'cancellation', title: 'Booking Cancelled', message: 'Mike Johnson cancelled their appointment', read: true, createdAt: new Date(Date.now() - 7200000).toISOString() }
-        ]);
+        setTodayAppointments([]);
+        setNotifications([]);
       } finally {
         setLoading(false);
       }

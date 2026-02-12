@@ -127,13 +127,13 @@ export default function HomePage() {
               {salon.location}
             </p>
           </div>
-          <button
-            type="button"
+          <Link
+            href="/notifications"
             className="h-11 w-11 rounded-2xl bg-white/90 shadow-soft border border-white/70 flex items-center justify-center"
             aria-label="Notifications"
           >
             <Bell size={18} className="text-primary" />
-          </button>
+          </Link>
         </header>
 
         <div className="flex items-center gap-3">

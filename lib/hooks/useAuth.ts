@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { onAuthStateChanged, type User } from 'firebase/auth';
 import { auth } from '@/lib/firebase/client';
+import { buildApiUrl } from '@/lib/api/client';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -29,11 +30,13 @@ export function useAuth() {
   const fetchWithAuth = useCallback(
     async (url: string, options?: RequestInit) => {
       const headers = await getAuthHeaders();
-      const allHeaders: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...headers
-      };
-      return fetch(url, {
+      const allHeaders = new Headers(options?.headers);
+      Object.entries(headers).forEach(([key, value]) => allHeaders.set(key, value));
+      if (!allHeaders.has('Content-Type')) {
+        allHeaders.set('Content-Type', 'application/json');
+      }
+
+      return fetch(buildApiUrl(url), {
         ...options,
         headers: allHeaders
       });

@@ -137,6 +137,33 @@ export async function createAppointment({
     createdAt: new Date().toISOString()
   });
 
+  // Push in-app owner notification so booking status/price appears in owner portal instantly.
+  try {
+    const notificationType = status === 'confirmed' ? 'confirmation' : 'booking';
+    const timestamp = new Date().toISOString();
+    await adminDb.collection('notifications').add({
+      salonId,
+      appointmentId: appointmentRef.id,
+      type: notificationType,
+      title: status === 'confirmed' ? 'Paid Booking Confirmed' : 'New Booking Request',
+      message: `${customerName || customerEmail || 'A customer'} booked ${serviceName}.`,
+      serviceName,
+      date,
+      time,
+      status,
+      customerName: customerName ?? null,
+      recipientEmail: customerEmail ?? null,
+      recipientPhone: customerPhone ?? null,
+      price: priceValue,
+      channel: 'system',
+      read: false,
+      createdAt: timestamp,
+      sentAt: timestamp
+    });
+  } catch {
+    // Notification is best-effort and should not block booking creation.
+  }
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   if (customerEmail) {
     await sendBookingConfirmation({

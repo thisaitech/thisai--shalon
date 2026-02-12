@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { 
-  Heart, Calendar, Clock, MapPin, Star, Trash2, 
-  ShoppingBag, Bell, ChevronRight, CheckCircle, XCircle,
-  MessageCircle, Phone, Mail, RefreshCw
+  Bell, Heart, Calendar, Clock, MapPin, Star, Trash2, 
+  ShoppingBag, ChevronRight, CheckCircle, XCircle,
+  MessageCircle, RefreshCw
 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { formatCurrency, formatTime, formatDate } from '@/lib/utils';
+import { formatCurrency, formatTime, formatDate, toDateKey } from '@/lib/utils';
 import Skeleton from '@/components/ui/skeleton';
 import Button from '@/components/ui/button';
 import Badge from '@/components/ui/badge';
@@ -44,105 +44,95 @@ type Appointment = {
 };
 
 export default function WishlistPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, fetchWithAuth } = useAuth();
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [activeTab, setActiveTab] = useState<'wishlist' | 'appointments'>('wishlist');
   const [loading, setLoading] = useState(true);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading) return;
     
     const loadData = async () => {
       try {
+        if (!user?.email) {
+          setWishlist([]);
+          setAppointments([]);
+          return;
+        }
+
         // Load wishlist
-        const wishlistRes = await fetch('/api/wishlist');
+        const wishlistRes = await fetchWithAuth('/api/wishlist');
         if (wishlistRes.ok) {
           const data = await wishlistRes.json();
           setWishlist(data.wishlist || []);
         }
 
-        // Load appointments
-        const appointmentsRes = await fetch('/api/appointments');
+        // Load customer appointments
+        const appointmentsRes = await fetchWithAuth(
+          `/api/appointments?customerEmail=${encodeURIComponent(user.email)}`
+        );
         if (appointmentsRes.ok) {
           const data = await appointmentsRes.json();
-          setAppointments(data.appointments || []);
+          const normalized = Array.isArray(data.appointments)
+            ? data.appointments.map((apt: Record<string, unknown>) => ({
+                id: String(apt.id || ''),
+                salonId: String(apt.salonId || ''),
+                salonName: String(apt.salonName || 'Salon'),
+                salonLocation: String(apt.salonLocation || 'Location unavailable'),
+                serviceName: String(apt.serviceName || 'Service'),
+                servicePrice: Number(apt.servicePrice || apt.price || 0),
+                date: String(apt.date || ''),
+                time: String(apt.time || ''),
+                status: String(apt.status || 'pending') as Appointment['status'],
+                customerName: apt.customerName ? String(apt.customerName) : undefined,
+                customerPhone: apt.customerPhone ? String(apt.customerPhone) : undefined,
+                customerEmail: apt.customerEmail ? String(apt.customerEmail) : undefined,
+                notes: apt.notes ? String(apt.notes) : undefined,
+                paymentStatus: apt.paymentStatus ? String(apt.paymentStatus) : undefined
+              }))
+            : [];
+          setAppointments(normalized);
         }
       } catch {
-        // Mock data for demo
-        setWishlist([
-          {
-            id: '1',
-            salonId: 'salon-1',
-            salonName: 'Lumiere Unisex Salon',
-            salonLocation: 'MG Road, Bangalore',
-            salonRating: 4.8,
-            serviceId: 'svc-1',
-            serviceName: 'Haircut & Styling',
-            servicePrice: 500,
-            serviceDuration: 60,
-            addedAt: new Date().toISOString()
-          },
-          {
-            id: '2',
-            salonId: 'salon-2',
-            salonName: 'Glow Beauty Spa',
-            salonLocation: 'Indiranagar, Bangalore',
-            salonRating: 4.6,
-            serviceId: 'svc-2',
-            serviceName: 'Full Body Massage',
-            servicePrice: 1200,
-            serviceDuration: 90,
-            addedAt: new Date(Date.now() - 86400000).toISOString()
-          }
-        ]);
-
-        setAppointments([
-          {
-            id: 'apt-1',
-            salonId: 'salon-1',
-            salonName: 'Lumiere Unisex Salon',
-            salonLocation: 'MG Road, Bangalore',
-            serviceName: 'Haircut & Styling',
-            servicePrice: 500,
-            date: new Date().toISOString().slice(0, 10),
-            time: '14:00',
-            status: 'confirmed',
-            customerName: 'John Doe',
-            customerPhone: '+91 98765 43210',
-            paymentStatus: 'paid'
-          },
-          {
-            id: 'apt-2',
-            salonId: 'salon-2',
-            salonName: 'Glow Beauty Spa',
-            salonLocation: 'Indiranagar, Bangalore',
-            serviceName: 'Full Body Massage',
-            servicePrice: 1200,
-            date: new Date(Date.now() + 86400000 * 2).toISOString().slice(0, 10),
-            time: '11:00',
-            status: 'pending',
-            customerName: 'John Doe',
-            customerPhone: '+91 98765 43210',
-            paymentStatus: 'pending'
-          }
-        ]);
+        setWishlist([]);
+        setAppointments([]);
+        setActionError('Unable to load wishlist data.');
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
-  }, [authLoading]);
+  }, [authLoading, fetchWithAuth, user?.email]);
 
   const removeFromWishlist = async (itemId: string) => {
+    const previous = wishlist;
+    setActionError(null);
+    setRemovingId(itemId);
     setWishlist((prev) => prev.filter((item) => item.id !== itemId));
-    // TODO: Call API to remove
+    try {
+      const res = await fetchWithAuth(
+        `/api/wishlist?id=${encodeURIComponent(itemId)}`,
+        { method: 'DELETE' }
+      );
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        throw new Error(data.error || 'Unable to remove wishlist item');
+      }
+    } catch (err) {
+      setWishlist(previous);
+      setActionError((err as Error).message || 'Unable to remove wishlist item');
+    } finally {
+      setRemovingId(null);
+    }
   };
 
   const moveToBooking = (item: WishlistItem) => {
     // Navigate to booking page with pre-selected service
-    window.location.href = `/booking?salonId=${item.salonId}&serviceId=${item.serviceId}`;
+    window.location.href = `/booking?salon=${encodeURIComponent(item.salonId)}&service=${encodeURIComponent(item.serviceId)}`;
   };
 
   const getStatusColor = (status: string) => {
@@ -156,11 +146,12 @@ export default function WishlistPage() {
     }
   };
 
+  const todayKey = toDateKey(new Date());
   const upcomingAppointments = appointments.filter(
-    (apt) => ['pending', 'confirmed'].includes(apt.status) && new Date(apt.date) >= new Date()
+    (apt) => ['pending', 'confirmed', 'delayed'].includes(apt.status) && apt.date >= todayKey
   );
   const pastAppointments = appointments.filter(
-    (apt) => apt.status === 'completed' || new Date(apt.date) < new Date()
+    (apt) => apt.status === 'completed' || apt.status === 'canceled' || apt.date < todayKey
   );
 
   if (authLoading) {
@@ -196,11 +187,20 @@ export default function WishlistPage() {
           <h1 className="text-3xl font-display text-primary">My Bookings</h1>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/notifications" className="pill bg-white/90 text-primary flex items-center gap-2">
+            <Bell size={16} /> Notifications
+          </Link>
           <Link href="/appointments" className="pill bg-white/90 text-primary flex items-center gap-2">
             <Calendar size={16} /> My Appointments
           </Link>
         </div>
       </div>
+
+      {actionError ? (
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
+          {actionError}
+        </div>
+      ) : null}
 
       {/* Tab Navigation */}
       <div className="flex gap-4 border-b border-charcoal/10 pb-4">
@@ -285,6 +285,7 @@ export default function WishlistPage() {
                       variant="ghost"
                       onClick={() => removeFromWishlist(item.id)}
                       className="text-red-500"
+                      disabled={removingId === item.id}
                     >
                       <Trash2 size={16} />
                     </Button>
@@ -364,15 +365,25 @@ export default function WishlistPage() {
                     {/* Quick Actions */}
                     <div className="flex flex-wrap gap-2 pt-2 border-t border-charcoal/10">
                       <Link
+                        href={`/booking-confirmation?appointment=${encodeURIComponent(apt.id)}&status=${encodeURIComponent(apt.status)}`}
+                        className="text-sm text-primary hover:underline flex items-center gap-1"
+                      >
+                        <CheckCircle size={14} /> View Confirmation
+                      </Link>
+                      <span className="text-charcoal/30">|</span>
+                      <Link
                         href={`/salon/${apt.salonId}`}
                         className="text-sm text-primary hover:underline flex items-center gap-1"
                       >
                         <ChevronRight size={14} /> View Salon
                       </Link>
                       <span className="text-charcoal/30">|</span>
-                      <button className="text-sm text-charcoal/60 hover:text-primary flex items-center gap-1">
+                      <Link
+                        href={`/messages?appointment=${encodeURIComponent(apt.id)}`}
+                        className="text-sm text-charcoal/60 hover:text-primary flex items-center gap-1"
+                      >
                         <MessageCircle size={14} /> Contact
-                      </button>
+                      </Link>
                       <span className="text-charcoal/30">|</span>
                       <button className="text-sm text-red-500 hover:text-red-600 flex items-center gap-1">
                         <XCircle size={14} /> Cancel

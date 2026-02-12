@@ -107,14 +107,14 @@ export default function ProfileOverviewPage() {
             <p className="text-sm text-charcoal/70">Bookings, saved looks, and preferences.</p>
           </div>
 
-          <button
-            type="button"
+          <Link
+            href="/notifications"
             className="relative h-12 w-12 rounded-2xl bg-white/90 shadow-soft border border-white/70 flex items-center justify-center focus-ring"
             aria-label="Notifications"
           >
             <Bell size={18} className="text-ink" />
             <span className="absolute right-3 top-3 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-white" />
-          </button>
+          </Link>
         </header>
 
         {error ? (

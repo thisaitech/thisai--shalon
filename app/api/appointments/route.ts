@@ -12,6 +12,103 @@ function getTokenFromRequest(req: NextRequest) {
   return null;
 }
 
+type AppointmentDoc = Record<string, unknown> & {
+  salonId?: string;
+  payment?: Record<string, unknown>;
+  paymentMethod?: string;
+  paymentStatus?: string;
+  price?: number | string;
+};
+
+async function queryCustomerAppointmentsByField({
+  field,
+  value
+}: {
+  field: 'customerId' | 'customerEmail';
+  value: string;
+}) {
+  const db = getAdminDb();
+  try {
+    const snapshot = await db
+      .collection('appointments')
+      .where(field, '==', value)
+      .orderBy('date', 'desc')
+      .orderBy('time', 'desc')
+      .get();
+    return snapshot.docs;
+  } catch {
+    const snapshot = await db.collection('appointments').where(field, '==', value).get();
+    return snapshot.docs;
+  }
+}
+
+async function loadSalonMap(salonIds: string[]) {
+  const db = getAdminDb();
+  const ids = Array.from(new Set(salonIds.filter(Boolean)));
+  const entries = await Promise.all(
+    ids.map(async (id) => {
+      const salonDoc = await db.collection('salons').doc(id).get();
+      if (!salonDoc.exists) return null;
+      const data = salonDoc.data() || {};
+      return [
+        id,
+        {
+          name: typeof data.name === 'string' ? data.name : 'Salon',
+          location:
+            typeof data.location === 'string' ? data.location : 'Location unavailable'
+        }
+      ] as const;
+    })
+  );
+
+  const salons = new Map<string, { name: string; location: string }>();
+  for (const entry of entries) {
+    if (!entry) continue;
+    salons.set(entry[0], entry[1]);
+  }
+  return salons;
+}
+
+function normalizeAppointment({
+  id,
+  data,
+  salonsById
+}: {
+  id: string;
+  data: AppointmentDoc;
+  salonsById: Map<string, { name: string; location: string }>;
+}) {
+  const salonId = typeof data.salonId === 'string' ? data.salonId : '';
+  const salon = salonsById.get(salonId);
+  const payment =
+    data.payment && typeof data.payment === 'object'
+      ? (data.payment as Record<string, unknown>)
+      : undefined;
+  const paymentMethod =
+    (typeof payment?.method === 'string' && payment.method) ||
+    (typeof data.paymentMethod === 'string' ? data.paymentMethod : null);
+  const paymentStatus =
+    (typeof payment?.status === 'string' && payment.status) ||
+    (typeof data.paymentStatus === 'string' ? data.paymentStatus : null);
+  const normalizedPrice = Number(data.price || 0);
+
+  return {
+    id,
+    ...data,
+    salonId,
+    salonName:
+      (typeof data.salonName === 'string' && data.salonName) || salon?.name || 'Salon',
+    salonLocation:
+      (typeof data.salonLocation === 'string' && data.salonLocation) ||
+      salon?.location ||
+      'Location unavailable',
+    price: normalizedPrice,
+    servicePrice: normalizedPrice,
+    paymentMethod,
+    paymentStatus
+  };
+}
+
 // GET /api/appointments — get appointments for a customer or salon
 export async function GET(req: NextRequest) {
   try {
@@ -19,13 +116,8 @@ export async function GET(req: NextRequest) {
     const salonId = searchParams.get('salonId');
     const date = searchParams.get('date');
     const customerEmail = searchParams.get('customerEmail');
+    const customerId = searchParams.get('customerId');
     const appointmentId = searchParams.get('appointmentId');
-
-    const adminReady = Boolean(
-      process.env.FIREBASE_ADMIN_PROJECT_ID &&
-        process.env.FIREBASE_ADMIN_CLIENT_EMAIL &&
-        process.env.FIREBASE_ADMIN_PRIVATE_KEY
-    );
 
     // Get booked times for salon/date (public endpoint)
     if (salonId && date) {
@@ -40,20 +132,55 @@ export async function GET(req: NextRequest) {
       if (!doc.exists) {
         return NextResponse.json({ error: 'Appointment not found' }, { status: 404 });
       }
-      return NextResponse.json({ appointment: { id: doc.id, ...doc.data() } });
+      const data = doc.data() as AppointmentDoc;
+      const salonsById = await loadSalonMap([
+        typeof data?.salonId === 'string' ? data.salonId : ''
+      ]);
+      return NextResponse.json({
+        appointment: normalizeAppointment({ id: doc.id, data, salonsById })
+      });
     }
 
     // Get customer appointments (requires auth)
-    if (customerEmail) {
-      const db = getAdminDb();
-      const snapshot = await db
-        .collection('appointments')
-        .where('customerEmail', '==', customerEmail)
-        .orderBy('date', 'desc')
-        .orderBy('time', 'desc')
-        .get();
-      
-      const appointments = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    if (customerEmail || customerId) {
+      const docMap = new Map<string, any>();
+      if (customerId) {
+        const byCustomerId = await queryCustomerAppointmentsByField({
+          field: 'customerId',
+          value: customerId
+        });
+        byCustomerId.forEach((doc) => docMap.set(doc.id, doc));
+      }
+      if (customerEmail) {
+        const byCustomerEmail = await queryCustomerAppointmentsByField({
+          field: 'customerEmail',
+          value: customerEmail
+        });
+        byCustomerEmail.forEach((doc) => docMap.set(doc.id, doc));
+      }
+
+      const docs = Array.from(docMap.values()).sort((a, b) => {
+        const aDate = String(a.data().date || '');
+        const bDate = String(b.data().date || '');
+        const aTime = String(a.data().time || '');
+        const bTime = String(b.data().time || '');
+        return bDate.localeCompare(aDate) || bTime.localeCompare(aTime);
+      });
+
+      const salonsById = await loadSalonMap(
+        docs.map((doc) => {
+          const data = doc.data() as AppointmentDoc;
+          return typeof data.salonId === 'string' ? data.salonId : '';
+        })
+      );
+
+      const appointments = docs.map((doc) =>
+        normalizeAppointment({
+          id: doc.id,
+          data: doc.data() as AppointmentDoc,
+          salonsById
+        })
+      );
       return NextResponse.json({ appointments });
     }
 

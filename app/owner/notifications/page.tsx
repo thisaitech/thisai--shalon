@@ -6,9 +6,7 @@ import { Bell, Calendar, MessageSquare, DollarSign, Check, X, ChevronRight, Filt
 import OwnerSubnav from '@/components/layout/OwnerSubnav';
 import Skeleton from '@/components/ui/skeleton';
 import Button from '@/components/ui/button';
-import Badge from '@/components/ui/badge';
 import { useOwnerAuth } from '@/lib/hooks/useOwnerAuth';
-import { formatDate, formatTime } from '@/lib/utils';
 
 type Notification = {
   id: string;
@@ -43,54 +41,7 @@ export default function OwnerNotificationsPage() {
           setNotifications(data.notifications || []);
         }
       } catch {
-        // Mock notifications for demo
-        setNotifications([
-          {
-            id: '1',
-            type: 'booking',
-            title: 'New Booking',
-            message: 'John Doe booked Haircut & Styling',
-            appointmentId: 'apt-1',
-            customerName: 'John Doe',
-            serviceName: 'Haircut & Styling',
-            date: new Date().toISOString().slice(0, 10),
-            time: '10:00',
-            read: false,
-            createdAt: new Date().toISOString()
-          },
-          {
-            id: '2',
-            type: 'payment',
-            title: 'Payment Received',
-            message: '₹500 received from Jane Smith',
-            appointmentId: 'apt-2',
-            customerName: 'Jane Smith',
-            read: true,
-            createdAt: new Date(Date.now() - 3600000).toISOString()
-          },
-          {
-            id: '3',
-            type: 'cancellation',
-            title: 'Booking Cancelled',
-            message: 'Mike Johnson cancelled their appointment',
-            appointmentId: 'apt-3',
-            customerName: 'Mike Johnson',
-            serviceName: 'Full Body Massage',
-            read: false,
-            createdAt: new Date(Date.now() - 7200000).toISOString()
-          },
-          {
-            id: '4',
-            type: 'confirmation',
-            title: 'Appointment Confirmed',
-            message: 'Sarah Wilson confirmed their booking',
-            appointmentId: 'apt-4',
-            customerName: 'Sarah Wilson',
-            serviceName: 'Facial Treatment',
-            read: true,
-            createdAt: new Date(Date.now() - 10800000).toISOString()
-          }
-        ]);
+        setNotifications([]);
       } finally {
         setLoading(false);
       }
@@ -260,7 +211,10 @@ export default function OwnerNotificationsPage() {
                 </div>
                 
                 <div className="text-xs text-charcoal/40 flex-shrink-0">
-                  {formatTime(notification.createdAt)}
+                  {new Date(notification.createdAt).toLocaleTimeString([], {
+                    hour: 'numeric',
+                    minute: '2-digit'
+                  })}
                 </div>
               </div>
             ))}

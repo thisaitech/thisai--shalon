@@ -13,7 +13,7 @@ import Skeleton from '@/components/ui/skeleton';
 import Button from '@/components/ui/button';
 import Badge from '@/components/ui/badge';
 import { useOwnerAuth } from '@/lib/hooks/useOwnerAuth';
-import { formatCurrency, formatTime, formatDate } from '@/lib/utils';
+import { formatCurrency, formatTime, formatDate, toDateKey } from '@/lib/utils';
 
 type AppointmentDetail = {
   id: string;
@@ -42,7 +42,8 @@ type Message = {
   id: string;
   sender: 'owner' | 'customer';
   text: string;
-  timestamp: string;
+  timestamp?: string;
+  createdAt?: string;
   read: boolean;
 };
 
@@ -57,6 +58,9 @@ export default function AppointmentDetailPage() {
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messagesError, setMessagesError] = useState<string | null>(null);
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [showDelayModal, setShowDelayModal] = useState(false);
   const [delayDays, setDelayDays] = useState(1);
   const [delayReason, setDelayReason] = useState('');
@@ -83,6 +87,46 @@ export default function AppointmentDetailPage() {
     loadAppointment();
   }, [authLoading, user, appointmentId, fetchWithAuth]);
 
+  useEffect(() => {
+    if (authLoading || !user) return;
+
+    let cancelled = false;
+
+    const loadMessages = async (showLoading = false) => {
+      if (showLoading) setMessagesLoading(true);
+      try {
+        const res = await fetchWithAuth(
+          `/api/messages?appointmentId=${encodeURIComponent(appointmentId)}&role=owner`
+        );
+        const data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          messages?: Message[];
+        };
+        if (!res.ok) {
+          throw new Error(data.error || 'Unable to load messages');
+        }
+        if (cancelled) return;
+        setMessages(Array.isArray(data.messages) ? data.messages : []);
+        setMessagesError(null);
+      } catch (error) {
+        if (cancelled) return;
+        setMessagesError((error as Error).message || 'Unable to load messages');
+      } finally {
+        if (!cancelled && showLoading) setMessagesLoading(false);
+      }
+    };
+
+    loadMessages(true);
+    const intervalId = setInterval(() => {
+      loadMessages(false);
+    }, 7000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [appointmentId, authLoading, fetchWithAuth, user]);
+
   const updateStatus = async (status: string) => {
     setUpdating(true);
     try {
@@ -101,30 +145,36 @@ export default function AppointmentDetailPage() {
   };
 
   const sendMessage = async () => {
-    if (!message.trim() || !appointment) return;
-    
-    const newMessage: Message = {
-      id: Date.now().toString(),
-      sender: 'owner',
-      text: message,
-      timestamp: new Date().toISOString(),
-      read: false
-    };
-    
-    setMessages((prev) => [...prev, newMessage]);
+    const text = message.trim();
+    if (!text || !appointment || sendingMessage) return;
+
+    setSendingMessage(true);
+    setMessagesError(null);
     setMessage('');
-    
+
     try {
-      await fetchWithAuth('/api/messages', {
+      const res = await fetchWithAuth('/api/messages', {
         method: 'POST',
         body: JSON.stringify({
           appointmentId,
-          sender: 'owner',
-          text: newMessage.text
+          text
         })
       });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: Message;
+      };
+      if (!res.ok) {
+        throw new Error(data.error || 'Unable to send message');
+      }
+      if (data.message) {
+        setMessages((prev) => [...prev, data.message as Message]);
+      }
     } catch (error) {
-      console.error('Error sending message:', error);
+      setMessagesError((error as Error).message || 'Unable to send message');
+      setMessage(text);
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -133,9 +183,10 @@ export default function AppointmentDetailPage() {
     
     setUpdating(true);
     try {
-      const currentDate = new Date(appointment.date);
+      const [year, month, day] = appointment.date.split('-').map(Number);
+      const currentDate = new Date(year, month - 1, day);
       currentDate.setDate(currentDate.getDate() + delayDays);
-      const newDate = currentDate.toISOString().slice(0, 10);
+      const newDate = toDateKey(currentDate);
       
       const res = await fetchWithAuth('/api/appointments/status', {
         method: 'PATCH',
@@ -167,6 +218,7 @@ export default function AppointmentDetailPage() {
         body: JSON.stringify({
           appointmentId,
           type: 'sms',
+          customerId: appointment.customerId,
           customerPhone: appointment.customerPhone,
           customerName: appointment.customerName,
           serviceName: appointment.serviceName,
@@ -391,7 +443,11 @@ export default function AppointmentDetailPage() {
         </h2>
 
         <div className="card-surface p-4 space-y-4 max-h-64 overflow-y-auto">
-          {messages.length === 0 ? (
+          {messagesLoading ? (
+            <p className="text-sm text-charcoal/60 text-center py-4">Loading messages...</p>
+          ) : messagesError ? (
+            <p className="text-sm text-red-700 text-center py-4">{messagesError}</p>
+          ) : messages.length === 0 ? (
             <p className="text-sm text-charcoal/60 text-center py-4">No messages yet</p>
           ) : (
             messages.map((msg) => (
@@ -403,7 +459,10 @@ export default function AppointmentDetailPage() {
                 }`}>
                   <p className="text-sm">{msg.text}</p>
                   <p className={`text-xs mt-1 ${msg.sender === 'owner' ? 'text-white/70' : 'text-charcoal/50'}`}>
-                    {new Date(msg.timestamp).toLocaleTimeString()}
+                    {new Date(msg.createdAt || msg.timestamp || '').toLocaleTimeString([], {
+                      hour: 'numeric',
+                      minute: '2-digit'
+                    })}
                   </p>
                 </div>
               </div>
@@ -416,12 +475,13 @@ export default function AppointmentDetailPage() {
             type="text"
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
             placeholder="Type a message..."
             className="flex-1 bg-white/80 rounded-xl px-4 py-3 text-sm border border-white/70 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            disabled={sendingMessage}
           />
-          <Button onClick={sendMessage} className="flex items-center gap-2">
-            <Send size={16} /> Send
+          <Button onClick={sendMessage} className="flex items-center gap-2" disabled={sendingMessage || !message.trim()}>
+            <Send size={16} /> {sendingMessage ? 'Sending...' : 'Send'}
           </Button>
         </div>
       </div>

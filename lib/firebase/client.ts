@@ -2,8 +2,10 @@ import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
 
+const legacyApiKey = process.env.NEXT_PUBLIC_FIREBASE_zAPI_KEY || '';
+
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || legacyApiKey || '',
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '',
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || '',
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || '',
@@ -30,6 +32,11 @@ let app: ReturnType<typeof initializeApp> | null = null;
 
 if (isFirebaseConfigured) {
   app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  if (typeof window !== 'undefined' && !process.env.NEXT_PUBLIC_FIREBASE_API_KEY && legacyApiKey) {
+    console.warn(
+      'Using deprecated env var NEXT_PUBLIC_FIREBASE_zAPI_KEY. Rename it to NEXT_PUBLIC_FIREBASE_API_KEY.'
+    );
+  }
 } else if (typeof window !== 'undefined') {
   console.warn(
     `Firebase env vars missing: ${missingKeys.join(', ')}. ` +
